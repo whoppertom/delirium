@@ -7,7 +7,7 @@
 #include <allegro5/allegro_image.h>
 #include "funciones.h"
 #include "estructuras.h"
-#define FPS 60
+
 
 
 
@@ -28,18 +28,16 @@ int main()
 
     if (!al_init_primitives_addon()) {fprintf(stderr, "no se pudo inicializar primitivas");return -1;}
 
-    // pantalla completa 
-    al_set_new_display_flags(ALLEGRO_FULLSCREEN_WINDOW);
-
-    ALLEGRO_DISPLAY* ventana = al_create_display(0, 0);
+    ALLEGRO_DISPLAY* ventana = al_create_display(pantalla_ancho, pantalla_alto );
     if (!ventana) {fprintf(stderr, "no se pudo crear la ventana");return -1;}
 
     // CARGAR SPRITES
-    ALLEGRO_BITMAP* sprite_personaje=al_load_bitmap("sprites/personaje.png");
-    ALLEGRO_BITMAP* img_piso=al_load_bitmap("sprites/piso.png");
-    ALLEGRO_BITMAP* img_pared=al_load_bitmap("sprites/pared.png");
+    ALLEGRO_BITMAP* sprite_personaje1 = al_load_bitmap("sprites/sprite1.png");
+    ALLEGRO_BITMAP* img_piso = al_load_bitmap("sprites/piso.png");
+    ALLEGRO_BITMAP* img_pared = al_load_bitmap("sprites/pared.png");
+    ALLEGRO_BITMAP* img_pared_izq = al_load_bitmap("sprites/pared_izq.png");
 
-    if (!sprite_personaje || !img_piso || !img_pared) {fprintf(stderr, "error al cargar sprites");return -1;}
+    if (!sprite_personaje1 || !img_piso || !img_pared || !img_pared_izq) {fprintf(stderr, "error al cargar sprites");return -1;}
 
     ALLEGRO_TIMER* temporizador = al_create_timer(1.0 / FPS);
     if (!temporizador) {fprintf(stderr, "no se pudo crear el temporizador");return -1;}
@@ -50,21 +48,21 @@ int main()
     // cambiar titulo de la ventana
     al_set_window_title(ventana, "DELIRIUM");
 
-    int ancho=al_get_display_width(ventana);
-    int alto=al_get_display_height(ventana);
+    int borde_ancho_pantalla=al_get_display_width(ventana);
+    int borde_alto_pantalla=al_get_display_height(ventana);
+
+
     
     al_register_event_source(cola_eventos, al_get_display_event_source(ventana));
     al_register_event_source(cola_eventos, al_get_keyboard_event_source());
     al_register_event_source(cola_eventos, al_get_timer_event_source(temporizador));
 
 
-    jugador pepe = {400, 300, 10, 128};
-
-
+    jugador pepe = {INICIO_POSX, INICIO_POSY, INICIO_VELOCIDAD, INICIO_SIZE, 0};
 
     al_start_timer(temporizador);
 
-    bool teclas[4] = {false, false, false, false};
+    bool teclas[KEYS] = {false};
     bool ejecutar=true;
     bool redibujar=true;
     
@@ -132,10 +130,10 @@ int main()
             actualizar_jugador(&pepe, teclas, mapa);
             
             //bordes
-            if(pepe.x<0){pepe.x=0;}
-            if(pepe.y<0){pepe.y=0;}
-            if(pepe.x>ancho-pepe.tamaño){pepe.x=ancho-pepe.tamaño;}
-            if(pepe.y>alto-pepe.tamaño){pepe.y=alto-pepe.tamaño;}
+            if(pepe.posx < 0){pepe.posx = 0;}
+            if(pepe.posy < 0){pepe.posy = 0;}
+            if(pepe.posx > borde_ancho_pantalla - pepe.size){pepe.posx = borde_ancho_pantalla - pepe.size;}
+            if(pepe.posy > borde_alto_pantalla - pepe.size){pepe.posy = borde_alto_pantalla - pepe.size;}
 
             redibujar=true;
         }
@@ -143,13 +141,15 @@ int main()
         {
             redibujar=false;
             al_clear_to_color(al_map_rgb(0,0,0));
-            dibujar_mapa(mapa, img_piso, img_pared);
+            dibujar_mapa(mapa, img_piso, img_pared,img_pared_izq);
+
+
             al_draw_scaled_bitmap(
-                sprite_personaje,
-                64,0, //posicion en el sprite
-                64,64, //tamaño del recorte
-                pepe.x,pepe.y,
-                pepe.tamaño,pepe.tamaño,
+                sprite_personaje1,
+                0,0, //posicion en el sprite
+                corte_ancho_sprite, corte_alto_sprite, //tamaño del recorte
+                pepe.posx, pepe.posy,
+                pepe.size, pepe.size,
                 0
             );
             
@@ -162,9 +162,10 @@ int main()
     al_destroy_event_queue(cola_eventos);
     al_destroy_display(ventana);
     al_destroy_timer(temporizador);
-    al_destroy_bitmap(sprite_personaje);
+    al_destroy_bitmap(sprite_personaje1);
     al_destroy_bitmap(img_piso);
     al_destroy_bitmap(img_pared);
+    al_destroy_bitmap(img_pared_izq);
 
     return 0;
 }

@@ -1,9 +1,7 @@
 #ifndef ESTRUCTURAS_H
 #define ESTRUCTURAS_H
+#include "definiciones.h"
 
-#define MAPA_FILAS 17
-#define MAPA_COLUMNAS 30
-#define TILE_SIZE 64 //ancho y alto de cada bloque en pixeles
 
 enum TECLAS 
 {
@@ -14,10 +12,11 @@ enum TECLAS
 };
 
 typedef struct {
-    float x;
-    float y;
+    float posx;
+    float posy;
     float velocidad;
-    float tamaño;
+    float size;
+    int frame_actual;
 }jugador;
 
 
