@@ -18,7 +18,7 @@
 //---------JUGADOR---------
 
 #define INICIO_POSX 400
-#define INICIO_POSY 300
+#define INICIO_POSY 400
 #define INICIO_VELOCIDAD 10
 #define INICIO_SIZE 128
 #define KEYS 4

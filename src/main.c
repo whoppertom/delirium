@@ -36,8 +36,10 @@ int main()
     ALLEGRO_BITMAP* img_piso = al_load_bitmap("sprites/piso.png");
     ALLEGRO_BITMAP* img_pared = al_load_bitmap("sprites/pared.png");
     ALLEGRO_BITMAP* img_pared_izq = al_load_bitmap("sprites/pared_izq.png");
+    ALLEGRO_BITMAP* img_barra_vida = al_load_bitmap("sprites/barra_vida.png");
+    ALLEGRO_BITMAP* img_adrenalina = al_load_bitmap("sprites/adrenalina.png");
 
-    if (!sprite_personaje1 || !img_piso || !img_pared || !img_pared_izq) {fprintf(stderr, "error al cargar sprites");return -1;}
+    //if (!sprite_personaje1 || !img_piso || !img_pared || !img_pared_izq) {fprintf(stderr, "error al cargar sprites");return -1;}
 
     ALLEGRO_TIMER* temporizador = al_create_timer(1.0 / FPS);
     if (!temporizador) {fprintf(stderr, "no se pudo crear el temporizador");return -1;}
@@ -58,7 +60,7 @@ int main()
     al_register_event_source(cola_eventos, al_get_timer_event_source(temporizador));
 
 
-    jugador pepe = {INICIO_POSX, INICIO_POSY, INICIO_VELOCIDAD, INICIO_SIZE, 0};
+    jugador pepe = {INICIO_POSX, INICIO_POSY, INICIO_VELOCIDAD, INICIO_SIZE, 0, 100, 100};
 
     al_start_timer(temporizador);
 
@@ -66,7 +68,7 @@ int main()
     bool ejecutar=true;
     bool redibujar=true;
     
-    int mapa[MAPA_FILAS][MAPA_COLUMNAS];
+    char mapa[MAPA_FILAS][MAPA_COLUMNAS];
     inicializar_mapa(mapa);
 
 
@@ -135,13 +137,39 @@ int main()
             if(pepe.posx > borde_ancho_pantalla - pepe.size){pepe.posx = borde_ancho_pantalla - pepe.size;}
             if(pepe.posy > borde_alto_pantalla - pepe.size){pepe.posy = borde_alto_pantalla - pepe.size;}
 
+            //no resetea en cada frame
+            static int contador_vida = 0;
+            contador_vida++;
+            if(contador_vida >= 8)
+            {
+                contador_vida = 0;
+                if(pepe.vida > 0)
+                {
+                    pepe.vida--;
+                }
+            }
+
+            int centro_fila_jug = (pepe.posy + pepe.size /2) / TILE_SIZE;
+            int centro_columna_jug = (pepe.posx + pepe.size /2) / TILE_SIZE;
+
+            if(mapa[centro_fila_jug][centro_columna_jug] == 'A')
+            {
+                pepe.vida += 16;
+                if(pepe.vida > pepe.vida_maxima)
+                {
+                    pepe.vida = pepe.vida_maxima;
+                }
+                mapa[centro_fila_jug][centro_columna_jug] = '.';
+            }
+
             redibujar=true;
         }
         if (redibujar && al_is_event_queue_empty(cola_eventos))
         {
+
             redibujar=false;
             al_clear_to_color(al_map_rgb(0,0,0));
-            dibujar_mapa(mapa, img_piso, img_pared,img_pared_izq);
+            dibujar_mapa(mapa, img_piso, img_pared,img_pared_izq, img_adrenalina);
 
 
             al_draw_scaled_bitmap(
@@ -152,6 +180,35 @@ int main()
                 pepe.size, pepe.size,
                 0
             );
+
+            //dibujar barra de vida
+            float barra_posx = 20;
+            float barra_posy = 20;
+            float barra_ancho = 500;
+            float barra_alto = 200;
+
+
+
+            //dibujar fondo de barra de vida
+            al_draw_filled_rectangle(100, 84, 485, 142, al_map_rgb(50,50,50));
+
+            float porcentaje_de_vida = (float)(pepe.vida) / (float)(pepe.vida_maxima);
+            //dibujar porcentaje de vida
+            al_draw_filled_rectangle(100, 84, 100 + 385 * porcentaje_de_vida, 142, al_map_rgb(100, 0, 180));
+
+            al_draw_scaled_bitmap(
+                img_barra_vida,
+                0, 0,
+                al_get_bitmap_width(img_barra_vida),
+                al_get_bitmap_height(img_barra_vida),
+                barra_posx, barra_posy,
+                barra_ancho, barra_alto,
+                0
+                
+            );
+
+        
+        
             
 
             al_flip_display();
@@ -166,6 +223,8 @@ int main()
     al_destroy_bitmap(img_piso);
     al_destroy_bitmap(img_pared);
     al_destroy_bitmap(img_pared_izq);
+    al_destroy_bitmap(img_barra_vida);
+    al_destroy_bitmap(img_adrenalina);
 
     return 0;
 }

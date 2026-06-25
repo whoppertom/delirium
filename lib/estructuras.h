@@ -17,6 +17,8 @@ typedef struct {
     float velocidad;
     float size;
     int frame_actual;
+    int vida;
+    int vida_maxima;
 }jugador;
 
 

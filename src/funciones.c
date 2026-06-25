@@ -6,20 +6,20 @@
 
 
 
-void inicializar_mapa(int mapa[MAPA_FILAS][MAPA_COLUMNAS])
+void inicializar_mapa(char mapa[MAPA_FILAS][MAPA_COLUMNAS])
 {
     FILE* nivelprueba = fopen("assets/mapas/nivelprueba.txt", "r");
 
     int f,c;
     for(f=0;f<MAPA_FILAS;f++){
         for(c=0;c<MAPA_COLUMNAS;c++){
-           fscanf(nivelprueba, "%d", &mapa[f][c]);
+           fscanf(nivelprueba, " %c", &mapa[f][c]);
         }
     }
     fclose(nivelprueba);
 }
 
-void dibujar_mapa(int mapa[MAPA_FILAS][MAPA_COLUMNAS], ALLEGRO_BITMAP* img_piso, ALLEGRO_BITMAP* img_pared, ALLEGRO_BITMAP* img_pared_izq)
+void dibujar_mapa(char mapa[MAPA_FILAS][MAPA_COLUMNAS], ALLEGRO_BITMAP* img_piso, ALLEGRO_BITMAP* img_pared, ALLEGRO_BITMAP* img_pared_izq, ALLEGRO_BITMAP* img_adrenalina)
 {
     int f_dibujada, c_dibujada;
     for(f_dibujada=0;f_dibujada<MAPA_FILAS;f_dibujada++)
@@ -31,17 +31,29 @@ void dibujar_mapa(int mapa[MAPA_FILAS][MAPA_COLUMNAS], ALLEGRO_BITMAP* img_piso,
             float y_pantalla=f_dibujada*TILE_SIZE;
 
             //si hay un 1 colocamos sprite de pared
-            if(mapa[f_dibujada][c_dibujada]==1)
+            if(mapa[f_dibujada][c_dibujada] == '#')
             {
                 al_draw_bitmap(img_pared,x_pantalla,y_pantalla,0);
             }
-            else if(mapa[f_dibujada][c_dibujada]==0)
+            else if(mapa[f_dibujada][c_dibujada] == '.')
             {
                 al_draw_bitmap(img_piso,x_pantalla,y_pantalla,0);
             }
-            else if(mapa[f_dibujada][c_dibujada]==2)
+            else if(mapa[f_dibujada][c_dibujada] == '$')
             {
                 al_draw_bitmap(img_pared_izq,x_pantalla,y_pantalla,0);
+            }
+            else if(mapa[f_dibujada][c_dibujada] == 'A')
+            {
+                al_draw_bitmap(img_piso, x_pantalla, y_pantalla, 0);
+                al_draw_scaled_bitmap(img_adrenalina,
+                    0,0,
+                    al_get_bitmap_width(img_adrenalina),
+                    al_get_bitmap_height(img_adrenalina),
+                    x_pantalla, y_pantalla,
+                    TILE_SIZE, TILE_SIZE,
+                    0
+                );
             }
         }
 
@@ -50,22 +62,22 @@ void dibujar_mapa(int mapa[MAPA_FILAS][MAPA_COLUMNAS], ALLEGRO_BITMAP* img_piso,
 
 //-------determinar colision para bloques-------//
 
-bool colision(int celda)
+bool colision(char celda)
 {
-    return celda == 1 ||
-           celda == 2;
+    return celda == '#' ||
+           celda == '$';
 }
 
 //-------------hitbox------------------//
 
-bool hay_colision(jugador *p, int mapa[MAPA_FILAS][MAPA_COLUMNAS])
+bool hay_colision(jugador *p, char mapa[MAPA_FILAS][MAPA_COLUMNAS])
 {
     //calcular las celdas que el jugador pisa
 
-    int fila_sup = (p->posy)/ TILE_SIZE; 
-    int fila_inf = (p->posy + p->size-1)/ TILE_SIZE;
-    int col_izq  = (p->posx)/ TILE_SIZE;
-    int col_der  = (p->posx + p->size-1)/ TILE_SIZE;
+    int fila_sup = (p->posy+18)/ TILE_SIZE; 
+    int fila_inf = (p->posy-18 + p->size-1)/ TILE_SIZE;
+    int col_izq  = (p->posx+18)/ TILE_SIZE;
+    int col_der  = (p->posx-18 + p->size-1)/ TILE_SIZE;
     int f, c;
 
     //recorrer todas las celdas
@@ -83,7 +95,7 @@ bool hay_colision(jugador *p, int mapa[MAPA_FILAS][MAPA_COLUMNAS])
     return false;
 }
 
-void actualizar_jugador(jugador *p, bool teclas[KEYS], int mapa[MAPA_FILAS][MAPA_COLUMNAS])
+void actualizar_jugador(jugador *p, bool teclas[KEYS], char mapa[MAPA_FILAS][MAPA_COLUMNAS])
 {
     //guardar pos anterior
     float x_anterior = p->posx;
