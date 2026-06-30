@@ -28,8 +28,11 @@ int main()
 
     if (!al_init_primitives_addon()) {fprintf(stderr, "no se pudo inicializar primitivas");return -1;}
 
+
     ALLEGRO_DISPLAY* ventana = al_create_display(pantalla_ancho, pantalla_alto );
     if (!ventana) {fprintf(stderr, "no se pudo crear la ventana");return -1;}
+
+    ALLEGRO_FONT* fuente = al_create_builtin_font();
 
     // CARGAR SPRITES
     ALLEGRO_BITMAP* sprite_personaje1 = al_load_bitmap("sprites/sprite1.png");
@@ -37,7 +40,9 @@ int main()
     ALLEGRO_BITMAP* img_pared = al_load_bitmap("sprites/pared.png");
     ALLEGRO_BITMAP* img_pared_izq = al_load_bitmap("sprites/pared_izq.png");
     ALLEGRO_BITMAP* img_barra_vida = al_load_bitmap("sprites/barra_vida.png");
+    ALLEGRO_BITMAP* img_barra_adren = al_load_bitmap("sprites/barra_adrenalina.png");
     ALLEGRO_BITMAP* img_adrenalina = al_load_bitmap("sprites/adrenalina.png");
+    ALLEGRO_BITMAP* img_titulo = al_load_bitmap("sprites/titulo.png");
 
     //if (!sprite_personaje1 || !img_piso || !img_pared || !img_pared_izq) {fprintf(stderr, "error al cargar sprites");return -1;}
 
@@ -57,10 +62,12 @@ int main()
     
     al_register_event_source(cola_eventos, al_get_display_event_source(ventana));
     al_register_event_source(cola_eventos, al_get_keyboard_event_source());
+    al_register_event_source(cola_eventos, al_get_mouse_event_source());
     al_register_event_source(cola_eventos, al_get_timer_event_source(temporizador));
 
 
-    jugador pepe = {INICIO_POSX, INICIO_POSY, INICIO_VELOCIDAD, INICIO_SIZE, 0, 100, 100};
+    jugador pepe = {INICIO_POSX, INICIO_POSY, INICIO_VELOCIDAD, INICIO_SIZE, 0, 100, 100, 100, 100};
+    estado_juego estado = MENU;
 
     al_start_timer(temporizador);
 
@@ -126,90 +133,142 @@ int main()
                     break;
             }
         }
+        else if (evento.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN)
+        {
+            if (estado == MENU)
+            {
+                int pos_mousex = evento.mouse.x;
+                int pos_mousey = evento.mouse.y;
+
+                if (pos_mousex >= 760 && pos_mousex <= 1160 && pos_mousey >= 450 && pos_mousey <= 530)
+                {
+                    estado = JUEGO;
+                }
+                
+                if (pos_mousex >= 760 && pos_mousex <= 1160 && pos_mousey >= 570 && pos_mousey <= 650)
+                {
+                    ejecutar = false;
+                }
+            }
+        }
 
         else if(evento.type == ALLEGRO_EVENT_TIMER)
         {
-            actualizar_jugador(&pepe, teclas, mapa);
-            
-            //bordes
-            if(pepe.posx < 0){pepe.posx = 0;}
-            if(pepe.posy < 0){pepe.posy = 0;}
-            if(pepe.posx > borde_ancho_pantalla - pepe.size){pepe.posx = borde_ancho_pantalla - pepe.size;}
-            if(pepe.posy > borde_alto_pantalla - pepe.size){pepe.posy = borde_alto_pantalla - pepe.size;}
-
-            //no resetea en cada frame
-            static int contador_vida = 0;
-            contador_vida++;
-            if(contador_vida >= 8)
+            if (estado == JUEGO)
             {
-                contador_vida = 0;
-                if(pepe.vida > 0)
+                actualizar_jugador(&pepe, teclas, mapa);
+
+                //bordes
+                if(pepe.posx < 0){pepe.posx = 0;}
+                if(pepe.posy < 0){pepe.posy = 0;}
+                if(pepe.posx > borde_ancho_pantalla - pepe.size){pepe.posx = borde_ancho_pantalla - pepe.size;}
+                if(pepe.posy > borde_alto_pantalla - pepe.size){pepe.posy = borde_alto_pantalla - pepe.size;}
+
+                //no resetea en cada frame
+                static int contador_adren = 0;
+                contador_adren++;
+                if(contador_adren >=8)
                 {
-                    pepe.vida--;
+                    contador_adren = 0;
+                    if(pepe.adrenalina > 0)
+                    {
+                        pepe.adrenalina--;
+                    }
                 }
-            }
 
-            int centro_fila_jug = (pepe.posy + pepe.size /2) / TILE_SIZE;
-            int centro_columna_jug = (pepe.posx + pepe.size /2) / TILE_SIZE;
+                int centro_fila_jug = (pepe.posy + pepe.size /2) / TILE_SIZE;
+                int centro_columna_jug = (pepe.posx + pepe.size /2) / TILE_SIZE;
 
-            if(mapa[centro_fila_jug][centro_columna_jug] == 'A')
-            {
-                pepe.vida += 16;
-                if(pepe.vida > pepe.vida_maxima)
+                if(mapa[centro_fila_jug][centro_columna_jug] == 'A')
                 {
-                    pepe.vida = pepe.vida_maxima;
+                    pepe.adrenalina += 16;
+                    if(pepe.adrenalina > pepe.adren_maxima)
+                    {
+                        pepe.adrenalina = pepe.adren_maxima;
+                    }
+                    mapa[centro_fila_jug][centro_columna_jug] = '.';
                 }
-                mapa[centro_fila_jug][centro_columna_jug] = '.';
+                redibujar=true;
             }
-
-            redibujar=true;
         }
+
         if (redibujar && al_is_event_queue_empty(cola_eventos))
         {
 
             redibujar=false;
             al_clear_to_color(al_map_rgb(0,0,0));
-            dibujar_mapa(mapa, img_piso, img_pared,img_pared_izq, img_adrenalina);
 
+            if (estado == MENU)
+            {
+                al_draw_bitmap(img_titulo,400,80,0);
+                //boton inicio
+                al_draw_filled_rectangle(760,450,1160,530, al_map_rgb(255,255,255));
+                al_draw_text(fuente, al_map_rgb(0,0,0), 960,482, ALLEGRO_ALIGN_CENTRE, "JUGAR");
 
-            al_draw_scaled_bitmap(
-                sprite_personaje1,
-                0,0, //posicion en el sprite
-                corte_ancho_sprite, corte_alto_sprite, //tamaño del recorte
-                pepe.posx, pepe.posy,
-                pepe.size, pepe.size,
-                0
-            );
+                //boton salir
+                al_draw_filled_rectangle(760,570,1160,650, al_map_rgb(255,255,255));
+                al_draw_text(fuente, al_map_rgb(0,0,0), 960, 602, ALLEGRO_ALIGN_CENTRE, "SALIR");
+            }
 
-            //dibujar barra de vida
-            float barra_posx = 20;
-            float barra_posy = 20;
-            float barra_ancho = 500;
-            float barra_alto = 200;
+            else if (estado == JUEGO)
+            {
+                dibujar_mapa(mapa, img_piso, img_pared,img_pared_izq, img_adrenalina);
 
+                al_draw_scaled_bitmap(
+                    sprite_personaje1,
+                    0,0, //posicion en el sprite
+                    corte_ancho_sprite, corte_alto_sprite, //tamaño del recorte
+                    pepe.posx, pepe.posy,
+                    pepe.size, pepe.size,
+                    0
+                );
+                //dibujar rectangulo barra de vida
+                float barra_vida_posx = 25;
+                float barra_vida_posy = 40;
+                float barra_vida_ancho = 500;
+                float barra_vida_alto = 140;
 
+                //dibujar rectangulo de la barra de adrenalina
+                float barra_adren_posx = 40;
+                float barra_adren_posy = 102;
+                float barra_adren_ancho = 400;
+                float barra_adren_alto = 80;
 
-            //dibujar fondo de barra de vida
-            al_draw_filled_rectangle(100, 84, 485, 142, al_map_rgb(50,50,50));
+                //dibujar fondo de barra de vida
+                al_draw_filled_rectangle(100,85, 490, 125, al_map_rgb(50,50,50));
 
-            float porcentaje_de_vida = (float)(pepe.vida) / (float)(pepe.vida_maxima);
-            //dibujar porcentaje de vida
-            al_draw_filled_rectangle(100, 84, 100 + 385 * porcentaje_de_vida, 142, al_map_rgb(100, 0, 180));
+                float porcentaje_de_vida= (float)(pepe.vida)/(float)(pepe.vida_maxima);
 
-            al_draw_scaled_bitmap(
-                img_barra_vida,
-                0, 0,
-                al_get_bitmap_width(img_barra_vida),
-                al_get_bitmap_height(img_barra_vida),
-                barra_posx, barra_posy,
-                barra_ancho, barra_alto,
-                0
-                
-            );
+                //dibujar porcentaje de vida
+                al_draw_filled_rectangle(100,85, 100 + 390 * porcentaje_de_vida, 125, al_map_rgb(194,9,9));
 
-        
-        
-            
+                //dibujar fondo de barra de adrenalina
+                al_draw_filled_rectangle(100, 125, 415, 152, al_map_rgb(50,50,50));
+
+                float porcentaje_de_adren= (float)(pepe.adrenalina) / (float)(pepe.adren_maxima);
+
+                //dibujar porcentaje de adrenalina
+                al_draw_filled_rectangle(100, 125, 100 + 315 * porcentaje_de_adren, 152, al_map_rgb(106, 19, 168));
+
+                al_draw_scaled_bitmap(
+                    img_barra_vida,
+                    0, 0,
+                    al_get_bitmap_width(img_barra_vida),
+                    al_get_bitmap_height(img_barra_vida),
+                    barra_vida_posx, barra_vida_posy,
+                    barra_vida_ancho, barra_vida_alto,
+                    0
+                );
+                al_draw_scaled_bitmap(
+                    img_barra_adren,
+                    0, 0,
+                    al_get_bitmap_width(img_barra_adren),
+                    al_get_bitmap_height(img_barra_adren),
+                    barra_adren_posx, barra_adren_posy,
+                    barra_adren_ancho, barra_adren_alto,
+                    0   
+                );
+            }
 
             al_flip_display();
         }
@@ -223,8 +282,11 @@ int main()
     al_destroy_bitmap(img_piso);
     al_destroy_bitmap(img_pared);
     al_destroy_bitmap(img_pared_izq);
+    al_destroy_bitmap(img_barra_adren);
     al_destroy_bitmap(img_barra_vida);
     al_destroy_bitmap(img_adrenalina);
+    al_destroy_bitmap(img_titulo);
+    al_destroy_font(fuente);
 
     return 0;
 }

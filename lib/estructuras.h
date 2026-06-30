@@ -17,9 +17,16 @@ typedef struct {
     float velocidad;
     float size;
     int frame_actual;
+    int adrenalina;
+    int adren_maxima;
     int vida;
     int vida_maxima;
 }jugador;
+
+typedef enum {
+    MENU, // 0
+    JUEGO, // 1 
+} estado_juego;
 
 
 #endif 
