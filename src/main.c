@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdbool.h>
+#include <math.h>
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_primitives.h>
 #include <allegro5/allegro_font.h>
@@ -43,6 +44,10 @@ int main()
     ALLEGRO_BITMAP* img_barra_adren = al_load_bitmap("sprites/barra_adrenalina.png");
     ALLEGRO_BITMAP* img_adrenalina = al_load_bitmap("sprites/adrenalina.png");
     ALLEGRO_BITMAP* img_titulo = al_load_bitmap("sprites/titulo.png");
+    ALLEGRO_BITMAP* img_puntero = al_load_bitmap("sprites/puntero.png");
+    ALLEGRO_BITMAP* img_bala = al_load_bitmap("sprites/bala.png");
+    ALLEGRO_BITMAP* img_srun1 = al_load_bitmap("sprites/sprite1_run.png");
+    ALLEGRO_BITMAP* img_srun2 = al_load_bitmap("sprites/sprite1_run2.png"); 
 
     //if (!sprite_personaje1 || !img_piso || !img_pared || !img_pared_izq) {fprintf(stderr, "error al cargar sprites");return -1;}
 
@@ -69,16 +74,33 @@ int main()
     jugador pepe = {INICIO_POSX, INICIO_POSY, INICIO_VELOCIDAD, INICIO_SIZE, 0, 100, 100, 100, 100};
     estado_juego estado = MENU;
 
+    int mouse_x = 0;
+    int mouse_y = 0;
+     //------------balas------------//
+    bala proyectiles[MAX_BALAS];
+    for (int i = 0 ; i < MAX_BALAS ; i++)
+    {
+        proyectiles[i].activa = false;
+    }
+    float angulo_personaje = 0;
+    int cooldown_disparo = 0;
+    //------------------------//
+
+    
     al_start_timer(temporizador);
 
     bool teclas[KEYS] = {false};
     bool ejecutar=true;
     bool redibujar=true;
-    
+
+    //------------mapa------------//
     char mapa[MAPA_FILAS][MAPA_COLUMNAS];
     inicializar_mapa(mapa);
 
 
+    int frame_animacion = 0;
+    int sprite_actual = 0; // 0 = run1 ; 1 = run2
+    bool movimiento = false;
 
     while(ejecutar) 
     {
@@ -133,6 +155,11 @@ int main()
                     break;
             }
         }
+        else if (evento.type == ALLEGRO_EVENT_MOUSE_AXES)
+        {
+            mouse_x = evento.mouse.x;
+            mouse_y = evento.mouse.y;
+        }
         else if (evento.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN)
         {
             if (estado == MENU)
@@ -143,11 +170,46 @@ int main()
                 if (pos_mousex >= 760 && pos_mousex <= 1160 && pos_mousey >= 450 && pos_mousey <= 530)
                 {
                     estado = JUEGO;
+                    al_hide_mouse_cursor(ventana);
                 }
                 
                 if (pos_mousex >= 760 && pos_mousex <= 1160 && pos_mousey >= 570 && pos_mousey <= 650)
                 {
                     ejecutar = false;
+                }
+            }
+            else if(estado == JUEGO)
+            {
+
+                if(evento.mouse.button == 1)
+                {
+
+                    for (int i = 0; i < MAX_BALAS; i ++)
+                    {
+                        if (!proyectiles[i].activa)
+                        {
+                        float centro_x = pepe.posx + pepe.size/2;
+                        float centro_y = pepe.posy + pepe.size/2;
+
+                        float distancia_pistola = 40;
+                        float pistola_x = centro_x + distancia_pistola * cos(angulo_personaje);
+                        float pistola_y = centro_y + distancia_pistola * sin(angulo_personaje);
+
+                        float direccionx = mouse_x - pistola_x;
+                        float direcciony = mouse_y - pistola_y;
+
+                        float distancia_mouse = sqrt(direccionx*direccionx + direcciony*direcciony);
+                        float velocidad_bala = 30;
+                    
+                        proyectiles[i].posx = pistola_x;
+                        proyectiles[i].posy = pistola_y;
+                        proyectiles[i].vel_x = (direccionx/ distancia_mouse)* velocidad_bala;
+                        proyectiles[i].vel_y = (direcciony/ distancia_mouse)* velocidad_bala;
+                        proyectiles[i].angulo = atan2(direcciony, direccionx);
+                        proyectiles[i].activa = true; 
+                        cooldown_disparo = 10; //frames a esperar para el prox disparo
+                        }
+                    }
                 }
             }
         }
@@ -164,6 +226,31 @@ int main()
                 if(pepe.posx > borde_ancho_pantalla - pepe.size){pepe.posx = borde_ancho_pantalla - pepe.size;}
                 if(pepe.posy > borde_alto_pantalla - pepe.size){pepe.posy = borde_alto_pantalla - pepe.size;}
 
+                for (int i = 0; i < MAX_BALAS; i++)
+                {
+                    if (proyectiles[i].activa)
+                    {
+                        proyectiles[i].posx += proyectiles[i].vel_x;
+                        proyectiles[i].posy += proyectiles[i].vel_y;
+
+                        if (proyectiles[i].posx < 0 || proyectiles[i].posx > pantalla_ancho || proyectiles[i].posy < 0 || proyectiles[i].posy > pantalla_alto)
+                        {
+                            proyectiles[i].activa = false;
+                            continue;
+                        }
+                        int fila = (proyectiles[i].posy / TILE_SIZE);
+                        int col = (proyectiles[i].posx / TILE_SIZE);
+                        if (colision(mapa[fila][col]))
+                        {
+                            proyectiles[i].activa = false;
+                        }
+                    }
+                }
+
+                float centro_x = pepe.posx + pepe.size/ 2;
+                float centro_y = pepe.posy + pepe.size/2;
+                angulo_personaje = atan2(mouse_y - centro_y, mouse_x - centro_x) ;
+                
                 //no resetea en cada frame
                 static int contador_adren = 0;
                 contador_adren++;
@@ -188,19 +275,37 @@ int main()
                     }
                     mapa[centro_fila_jug][centro_columna_jug] = '.';
                 }
+
+                movimiento = teclas[KEY_W] || teclas[KEY_S] || teclas[KEY_A] || teclas[KEY_D];
+                if (movimiento){
+                    frame_animacion++;
+                    if (frame_animacion >= 8 ) //cada 8 frames cambia de sprite
+                    {
+                        frame_animacion = 0;
+                        sprite_actual = 1 - sprite_actual;
+                    }
+                }
+                else {
+                    frame_animacion = 0;
+                    sprite_actual = 0;
+                }
+
                 redibujar=true;
             }
         }
+
+        //----------------DIBUJAR----------------//
 
         if (redibujar && al_is_event_queue_empty(cola_eventos))
         {
 
             redibujar=false;
-            al_clear_to_color(al_map_rgb(0,0,0));
+            al_clear_to_color(al_map_rgb(120,110,110));
+
 
             if (estado == MENU)
             {
-                al_draw_bitmap(img_titulo,400,80,0);
+                al_draw_bitmap(img_titulo,545,90,0);
                 //boton inicio
                 al_draw_filled_rectangle(760,450,1160,530, al_map_rgb(255,255,255));
                 al_draw_text(fuente, al_map_rgb(0,0,0), 960,482, ALLEGRO_ALIGN_CENTRE, "JUGAR");
@@ -213,15 +318,52 @@ int main()
             else if (estado == JUEGO)
             {
                 dibujar_mapa(mapa, img_piso, img_pared,img_pared_izq, img_adrenalina);
+                al_draw_bitmap(img_puntero, mouse_x - 16, mouse_y -16,0);
+                
+                ALLEGRO_BITMAP* sprite_a_dibujar;
+                if(!movimiento)
+                {
+                    sprite_a_dibujar = sprite_personaje1;
+                }
+                else if(sprite_actual == 0)
+                {
+                    sprite_a_dibujar = img_srun1;
+                }
+                else if(sprite_actual == 1)
+                {
+                    sprite_a_dibujar = img_srun2;
+                }
 
-                al_draw_scaled_bitmap(
-                    sprite_personaje1,
-                    0,0, //posicion en el sprite
-                    corte_ancho_sprite, corte_alto_sprite, //tamaño del recorte
-                    pepe.posx, pepe.posy,
-                    pepe.size, pepe.size,
+                float ancho = al_get_bitmap_width(sprite_a_dibujar);
+                float alto = al_get_bitmap_height(sprite_a_dibujar);
+
+                al_draw_scaled_rotated_bitmap(
+                    sprite_a_dibujar,
+                    ancho / 2,   
+                    alto / 2,    
+                    pepe.posx + pepe.size / 2, 
+                    pepe.posy + pepe.size / 2, 
+                    pepe.size / ancho, 
+                    pepe.size / alto,  
+                    angulo_personaje,          
                     0
                 );
+                //dibujar bala
+                for (int i = 0; i < MAX_BALAS; i++)
+                {
+                    if (proyectiles[i].activa)
+                    {
+                        al_draw_rotated_bitmap(
+                            img_bala,al_get_bitmap_width(img_bala)/2,
+                            al_get_bitmap_height(img_bala)/2,
+                            proyectiles[i].posx,
+                            proyectiles[i].posy,
+                            proyectiles[i].angulo,
+                            0
+                        );
+                    }
+                }
+
                 //dibujar rectangulo barra de vida
                 float barra_vida_posx = 25;
                 float barra_vida_posy = 40;
@@ -287,6 +429,10 @@ int main()
     al_destroy_bitmap(img_adrenalina);
     al_destroy_bitmap(img_titulo);
     al_destroy_font(fuente);
+    al_destroy_bitmap(img_puntero);
+    al_destroy_bitmap(img_bala);
+    al_destroy_bitmap(img_srun1);
+    al_destroy_bitmap(img_srun2);
 
     return 0;
 }

@@ -26,5 +26,6 @@
 #define corte_alto_sprite 64
 
 
+#define MAX_BALAS 20
 
 #endif

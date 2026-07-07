@@ -28,5 +28,14 @@ typedef enum {
     JUEGO, // 1 
 } estado_juego;
 
+typedef struct{
+    float posx;
+    float posy;
+    float vel_x;
+    float vel_y;
+    float angulo;
+    bool activa;
+}bala;
+
 
 #endif 
