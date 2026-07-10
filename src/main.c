@@ -8,6 +8,7 @@
 #include <allegro5/allegro_image.h>
 #include "funciones.h"
 #include "estructuras.h"
+#include "enemigo.h"
 
 
 
@@ -48,8 +49,10 @@ int main()
     ALLEGRO_BITMAP* img_bala = al_load_bitmap("sprites/bala.png");
     ALLEGRO_BITMAP* img_srun1 = al_load_bitmap("sprites/sprite1_run.png");
     ALLEGRO_BITMAP* img_srun2 = al_load_bitmap("sprites/sprite1_run2.png"); 
+    ALLEGRO_BITMAP* img_enemigo1 = al_load_bitmap("sprites/enemigo1.png");
+    ALLEGRO_BITMAP* img_bala_e1 = al_load_bitmap("sprites/bala_enemigo1.png");
 
-    //if (!sprite_personaje1 || !img_piso || !img_pared || !img_pared_izq) {fprintf(stderr, "error al cargar sprites");return -1;}
+
 
     ALLEGRO_TIMER* temporizador = al_create_timer(1.0 / FPS);
     if (!temporizador) {fprintf(stderr, "no se pudo crear el temporizador");return -1;}
@@ -71,19 +74,13 @@ int main()
     al_register_event_source(cola_eventos, al_get_timer_event_source(temporizador));
 
 
-    jugador pepe = {INICIO_POSX, INICIO_POSY, INICIO_VELOCIDAD, INICIO_SIZE, 0, 100, 100, 100, 100};
+    jugador pepe = {INICIO_POSX, INICIO_POSY, INICIO_VELOCIDAD, INICIO_SIZE, 0, 100, 100, 100, 100, {0}, 0};
     estado_juego estado = MENU;
 
     int mouse_x = 0;
     int mouse_y = 0;
      //------------balas------------//
-    bala proyectiles[MAX_BALAS];
-    for (int i = 0 ; i < MAX_BALAS ; i++)
-    {
-        proyectiles[i].activa = false;
-    }
     float angulo_personaje = 0;
-    int cooldown_disparo = 0;
     //------------------------//
 
     
@@ -96,6 +93,12 @@ int main()
     //------------mapa------------//
     char mapa[MAPA_FILAS][MAPA_COLUMNAS];
     inicializar_mapa(mapa);
+
+    //------------enemigo1------------//
+    enemigo enemigos[MAX_ENEMIGOS];
+    int cantidad_enemigos = 0;
+    inicializar_enemigos(mapa, enemigos, &cantidad_enemigos);
+
 
 
     int frame_animacion = 0;
@@ -181,12 +184,12 @@ int main()
             else if(estado == JUEGO)
             {
 
-                if(evento.mouse.button == 1)
+                if(evento.mouse.button == 1 && pepe.cooldown_disparo == 0)
                 {
 
                     for (int i = 0; i < MAX_BALAS; i ++)
                     {
-                        if (!proyectiles[i].activa)
+                        if (!pepe.balas[i].activa)
                         {
                         float centro_x = pepe.posx + pepe.size/2;
                         float centro_y = pepe.posy + pepe.size/2;
@@ -200,25 +203,47 @@ int main()
 
                         float distancia_mouse = sqrt(direccionx*direccionx + direcciony*direcciony);
                         float velocidad_bala = 30;
+
+                        //---------disparar---------//
                     
-                        proyectiles[i].posx = pistola_x;
-                        proyectiles[i].posy = pistola_y;
-                        proyectiles[i].vel_x = (direccionx/ distancia_mouse)* velocidad_bala;
-                        proyectiles[i].vel_y = (direcciony/ distancia_mouse)* velocidad_bala;
-                        proyectiles[i].angulo = atan2(direcciony, direccionx);
-                        proyectiles[i].activa = true; 
-                        cooldown_disparo = 10; //frames a esperar para el prox disparo
+                        pepe.balas[i].posx = pistola_x;
+                        pepe.balas[i].posy = pistola_y;
+                        pepe.balas[i].vel_x = (direccionx/ distancia_mouse)* velocidad_bala;
+                        pepe.balas[i].vel_y = (direcciony/ distancia_mouse)* velocidad_bala;
+                        pepe.balas[i].angulo = atan2(direcciony, direccionx);
+                        pepe.balas[i].activa = true; 
+                        pepe.cooldown_disparo = 20; //frames a esperar para el prox disparo
+                        break;
+
                         }
                     }
                 }
             }
         }
 
+        //----------TIMER----------//
         else if(evento.type == ALLEGRO_EVENT_TIMER)
         {
             if (estado == JUEGO)
             {
-                actualizar_jugador(&pepe, teclas, mapa);
+                if (pepe.vida > 0)
+                {
+                    actualizar_jugador(&pepe, teclas, mapa);
+                }
+
+
+                
+                for(int i = 0; i < cantidad_enemigos; i++)
+                {
+                    if(enemigos[i].activa)
+                    {
+                        disparar_enemigo(&enemigos[i], &pepe);
+                        actualizar_balas_enemigo(&enemigos[i], mapa);
+                        daño_jugador(enemigos, cantidad_enemigos, &pepe);
+                    }
+                }
+
+                if (pepe.cooldown_disparo > 0) {pepe.cooldown_disparo--;}
 
                 //bordes
                 if(pepe.posx < 0){pepe.posx = 0;}
@@ -228,21 +253,21 @@ int main()
 
                 for (int i = 0; i < MAX_BALAS; i++)
                 {
-                    if (proyectiles[i].activa)
+                    if (pepe.balas[i].activa)
                     {
-                        proyectiles[i].posx += proyectiles[i].vel_x;
-                        proyectiles[i].posy += proyectiles[i].vel_y;
+                        pepe.balas[i].posx += pepe.balas[i].vel_x;
+                        pepe.balas[i].posy += pepe.balas[i].vel_y;
 
-                        if (proyectiles[i].posx < 0 || proyectiles[i].posx > pantalla_ancho || proyectiles[i].posy < 0 || proyectiles[i].posy > pantalla_alto)
+                        if (pepe.balas[i].posx < 0 || pepe.balas[i].posx > pantalla_ancho || pepe.balas[i].posy < 0 || pepe.balas[i].posy > pantalla_alto)
                         {
-                            proyectiles[i].activa = false;
+                            pepe.balas[i].activa = false;
                             continue;
                         }
-                        int fila = (proyectiles[i].posy / TILE_SIZE);
-                        int col = (proyectiles[i].posx / TILE_SIZE);
+                        int fila = (pepe.balas[i].posy / TILE_SIZE);
+                        int col = (pepe.balas[i].posx / TILE_SIZE);
                         if (colision(mapa[fila][col]))
                         {
-                            proyectiles[i].activa = false;
+                            pepe.balas[i].activa = false;
                         }
                     }
                 }
@@ -279,7 +304,7 @@ int main()
                 movimiento = teclas[KEY_W] || teclas[KEY_S] || teclas[KEY_A] || teclas[KEY_D];
                 if (movimiento){
                     frame_animacion++;
-                    if (frame_animacion >= 8 ) //cada 8 frames cambia de sprite
+                    if (frame_animacion >= 15 ) //cada 15frames cambia de sprite
                     {
                         frame_animacion = 0;
                         sprite_actual = 1 - sprite_actual;
@@ -293,6 +318,7 @@ int main()
                 redibujar=true;
             }
         }
+        //-------------------//
 
         //----------------DIBUJAR----------------//
 
@@ -333,7 +359,7 @@ int main()
                 {
                     sprite_a_dibujar = img_srun2;
                 }
-
+                //dibujar jugador
                 float ancho = al_get_bitmap_width(sprite_a_dibujar);
                 float alto = al_get_bitmap_height(sprite_a_dibujar);
 
@@ -348,17 +374,64 @@ int main()
                     angulo_personaje,          
                     0
                 );
+
+                //dibujar enemigo
+                for (int i = 0; i < cantidad_enemigos; i++)
+                {
+                    if(enemigos[i].activa)
+                    {
+                        al_draw_scaled_bitmap(
+                            img_enemigo1,
+                            0,0,
+                            al_get_bitmap_width(img_enemigo1),
+                            al_get_bitmap_height(img_enemigo1),
+                            enemigos[i].posx, enemigos[i].posy,
+                            enemigos[i].ancho, enemigos[i].alto,
+                            0
+                        );
+                    }
+                }
+
+                //dibujar bala enemigo
+                for (int i = 0; i < cantidad_enemigos; i++)
+                {
+                    if (enemigos[i].activa)
+                    {
+                        for(int j = 0; j < MAX_BALAS; j++)
+                        {
+                            if(enemigos[i].balas[j].activa)
+                            {
+                                al_draw_rotated_bitmap(
+                                    img_bala_e1,
+                                    al_get_bitmap_width(img_bala_e1)/2,
+                                    al_get_bitmap_height(img_bala_e1)/2,
+                                    enemigos[i].balas[j].posx,
+                                    enemigos[i].balas[j].posy,
+                                    enemigos[i].balas[j].angulo,
+                                    0
+                                );
+                            }
+                        }
+                    }
+                }
+
+
+
+
+
+
                 //dibujar bala
                 for (int i = 0; i < MAX_BALAS; i++)
                 {
-                    if (proyectiles[i].activa)
+                    if (pepe.balas[i].activa)
                     {
                         al_draw_rotated_bitmap(
-                            img_bala,al_get_bitmap_width(img_bala)/2,
+                            img_bala,
+                            al_get_bitmap_width(img_bala)/2,
                             al_get_bitmap_height(img_bala)/2,
-                            proyectiles[i].posx,
-                            proyectiles[i].posy,
-                            proyectiles[i].angulo,
+                            pepe.balas[i].posx,
+                            pepe.balas[i].posy,
+                            pepe.balas[i].angulo,
                             0
                         );
                     }
@@ -433,6 +506,8 @@ int main()
     al_destroy_bitmap(img_bala);
     al_destroy_bitmap(img_srun1);
     al_destroy_bitmap(img_srun2);
+    al_destroy_bitmap(img_enemigo1);
+    al_destroy_bitmap(img_bala_e1);
 
     return 0;
 }

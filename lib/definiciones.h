@@ -27,5 +27,6 @@
 
 
 #define MAX_BALAS 20
+#define MAX_ENEMIGOS 10
 
 #endif
