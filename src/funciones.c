@@ -109,5 +109,9 @@ void actualizar_jugador(jugador *p, bool teclas[KEYS], char mapa[MAPA_FILAS][MAP
     if(teclas[KEY_W]) {p->posy -= p->velocidad;}
     if(teclas[KEY_S]) {p->posy += p->velocidad;}
 
-    if(hay_colision(p, mapa)) {p->posy = y_anterior;}
+    if(hay_colision(p, mapa)) 
+    {
+        p->posy = y_anterior;
+    }
 }
+

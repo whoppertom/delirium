@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <math.h>
+#include <stdlib.h>
+#include <time.h>
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_primitives.h>
 #include <allegro5/allegro_font.h>
@@ -73,7 +75,7 @@ int main()
     al_register_event_source(cola_eventos, al_get_mouse_event_source());
     al_register_event_source(cola_eventos, al_get_timer_event_source(temporizador));
 
-
+    srand(time(NULL));
     jugador pepe = {INICIO_POSX, INICIO_POSY, INICIO_VELOCIDAD, INICIO_SIZE, 0, 100, 100, 100, 100, {0}, 0};
     estado_juego estado = MENU;
 
@@ -183,10 +185,9 @@ int main()
             }
             else if(estado == JUEGO)
             {
-
                 if(evento.mouse.button == 1 && pepe.cooldown_disparo == 0)
                 {
-
+                    //---------disparar---------//
                     for (int i = 0; i < MAX_BALAS; i ++)
                     {
                         if (!pepe.balas[i].activa)
@@ -204,7 +205,6 @@ int main()
                         float distancia_mouse = sqrt(direccionx*direccionx + direcciony*direcciony);
                         float velocidad_bala = 30;
 
-                        //---------disparar---------//
                     
                         pepe.balas[i].posx = pistola_x;
                         pepe.balas[i].posy = pistola_y;
@@ -212,6 +212,7 @@ int main()
                         pepe.balas[i].vel_y = (direcciony/ distancia_mouse)* velocidad_bala;
                         pepe.balas[i].angulo = atan2(direcciony, direccionx);
                         pepe.balas[i].activa = true; 
+                        pepe.balas[i].daño = 25;
                         pepe.cooldown_disparo = 20; //frames a esperar para el prox disparo
                         break;
 
@@ -237,11 +238,14 @@ int main()
                 {
                     if(enemigos[i].activa)
                     {
-                        disparar_enemigo(&enemigos[i], &pepe);
+                        actualizar_enemigo(&enemigos[i], mapa);
+                        disparar_enemigo(&enemigos[i], &pepe, mapa);
                         actualizar_balas_enemigo(&enemigos[i], mapa);
-                        daño_jugador(enemigos, cantidad_enemigos, &pepe);
                     }
                 }
+
+                daño_jugador(enemigos, cantidad_enemigos, &pepe);
+                daño_enemigo(enemigos, cantidad_enemigos, &pepe);
 
                 if (pepe.cooldown_disparo > 0) {pepe.cooldown_disparo--;}
 
@@ -363,6 +367,7 @@ int main()
                 float ancho = al_get_bitmap_width(sprite_a_dibujar);
                 float alto = al_get_bitmap_height(sprite_a_dibujar);
 
+                //dibujar jugador
                 al_draw_scaled_rotated_bitmap(
                     sprite_a_dibujar,
                     ancho / 2,   
@@ -380,13 +385,18 @@ int main()
                 {
                     if(enemigos[i].activa)
                     {
-                        al_draw_scaled_bitmap(
+                        float ancho_sprite = al_get_bitmap_width(img_enemigo1);
+                        float alto_sprite = al_get_bitmap_height(img_enemigo1);
+
+                        al_draw_scaled_rotated_bitmap(
                             img_enemigo1,
-                            0,0,
-                            al_get_bitmap_width(img_enemigo1),
-                            al_get_bitmap_height(img_enemigo1),
-                            enemigos[i].posx, enemigos[i].posy,
-                            enemigos[i].ancho, enemigos[i].alto,
+                            ancho_sprite / 2,
+                            alto_sprite / 2,
+                            enemigos[i].posx + enemigos[i].ancho / 2,
+                            enemigos[i].posy + enemigos[i].alto / 2,
+                            enemigos[i].ancho/ancho_sprite,
+                            enemigos[i].alto/alto_sprite,
+                            enemigos[i].angulo,
                             0
                         );
                     }
@@ -415,12 +425,7 @@ int main()
                     }
                 }
 
-
-
-
-
-
-                //dibujar bala
+                //dibujar bala jugador
                 for (int i = 0; i < MAX_BALAS; i++)
                 {
                     if (pepe.balas[i].activa)

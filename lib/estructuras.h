@@ -1,6 +1,7 @@
 #ifndef ESTRUCTURAS_H
 #define ESTRUCTURAS_H
 #include "definiciones.h"
+#include <stdbool.h>
 
 
 enum TECLAS 
@@ -17,6 +18,7 @@ typedef struct{
     float vel_y;
     float angulo;
     bool activa;
+    int daño;
 }bala;
 
 typedef struct {
@@ -41,6 +43,12 @@ typedef struct {
     bool activa;
     bala balas[MAX_BALAS];
     int cooldown_disparo;
+    float velocidad;
+    float angulo;
+    int modo_patrulla; // 0 = horizontal ; 1 = vertical
+    int direccion; //1 = derecha/abajo ; -1 = izquierda/arriba
+    int espera;
+    int vida;
 }enemigo;
 
 typedef enum {
