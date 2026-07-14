@@ -53,6 +53,7 @@ int main()
     ALLEGRO_BITMAP* img_srun2 = al_load_bitmap("sprites/sprite1_run2.png"); 
     ALLEGRO_BITMAP* img_enemigo1 = al_load_bitmap("sprites/enemigo1.png");
     ALLEGRO_BITMAP* img_bala_e1 = al_load_bitmap("sprites/bala_enemigo1.png");
+    ALLEGRO_BITMAP* img_pared_interior = al_load_bitmap("sprites/pared_interior.png");
 
 
 
@@ -347,7 +348,7 @@ int main()
 
             else if (estado == JUEGO)
             {
-                dibujar_mapa(mapa, img_piso, img_pared,img_pared_izq, img_adrenalina);
+                dibujar_mapa(mapa, img_piso, img_pared,img_pared_izq, img_adrenalina, img_pared_interior);
                 al_draw_bitmap(img_puntero, mouse_x - 16, mouse_y -16,0);
                 
                 ALLEGRO_BITMAP* sprite_a_dibujar;
@@ -513,6 +514,7 @@ int main()
     al_destroy_bitmap(img_srun2);
     al_destroy_bitmap(img_enemigo1);
     al_destroy_bitmap(img_bala_e1);
+    al_destroy_bitmap(img_pared_interior);
 
     return 0;
 }

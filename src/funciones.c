@@ -19,7 +19,7 @@ void inicializar_mapa(char mapa[MAPA_FILAS][MAPA_COLUMNAS])
     fclose(nivelprueba);
 }
 
-void dibujar_mapa(char mapa[MAPA_FILAS][MAPA_COLUMNAS], ALLEGRO_BITMAP* img_piso, ALLEGRO_BITMAP* img_pared, ALLEGRO_BITMAP* img_pared_izq, ALLEGRO_BITMAP* img_adrenalina)
+void dibujar_mapa(char mapa[MAPA_FILAS][MAPA_COLUMNAS], ALLEGRO_BITMAP* img_piso, ALLEGRO_BITMAP* img_pared, ALLEGRO_BITMAP* img_pared_izq, ALLEGRO_BITMAP* img_adrenalina, ALLEGRO_BITMAP* img_pared_interior)
 {
     int f_dibujada, c_dibujada;
     for(f_dibujada=0;f_dibujada<MAPA_FILAS;f_dibujada++)
@@ -43,6 +43,10 @@ void dibujar_mapa(char mapa[MAPA_FILAS][MAPA_COLUMNAS], ALLEGRO_BITMAP* img_piso
             {
                 al_draw_bitmap(img_pared_izq,x_pantalla,y_pantalla,0);
             }
+            else if(mapa[f_dibujada][c_dibujada] == '!')
+            {
+                al_draw_bitmap(img_pared_interior, x_pantalla,y_pantalla,0);
+            }
             else if(mapa[f_dibujada][c_dibujada] == 'A')
             {
                 al_draw_bitmap(img_piso, x_pantalla, y_pantalla, 0);
@@ -65,7 +69,8 @@ void dibujar_mapa(char mapa[MAPA_FILAS][MAPA_COLUMNAS], ALLEGRO_BITMAP* img_piso
 bool colision(char celda)
 {
     return celda == '#' ||
-           celda == '$';
+           celda == '$' ||
+           celda == '!';
 }
 
 //-------------hitbox------------------//

@@ -5,7 +5,7 @@
 
 
 void inicializar_mapa(char mapa[MAPA_FILAS][MAPA_COLUMNAS]);
-void dibujar_mapa(char mapa[MAPA_FILAS][MAPA_COLUMNAS], ALLEGRO_BITMAP* img_piso, ALLEGRO_BITMAP* img_pared,ALLEGRO_BITMAP* img_pared_izq, ALLEGRO_BITMAP* img_adrenalina);
+void dibujar_mapa(char mapa[MAPA_FILAS][MAPA_COLUMNAS], ALLEGRO_BITMAP* img_piso, ALLEGRO_BITMAP* img_pared,ALLEGRO_BITMAP* img_pared_izq, ALLEGRO_BITMAP* img_adrenalina, ALLEGRO_BITMAP* img_pared_interior);
 void actualizar_jugador(jugador*p,bool teclas[KEYS],char mapa[MAPA_FILAS][MAPA_COLUMNAS]);
 
 bool colision(char celda); 
