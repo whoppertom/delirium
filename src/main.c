@@ -95,7 +95,7 @@ int main()
 
     //------------mapa------------//
     char mapa[MAPA_FILAS][MAPA_COLUMNAS];
-    inicializar_mapa(mapa);
+    inicializar_mapa(mapa, "assets/mapas/nivelprueba.txt");
 
     //------------enemigo1------------//
     enemigo enemigos[MAX_ENEMIGOS];
@@ -304,6 +304,23 @@ int main()
                         pepe.adrenalina = pepe.adren_maxima;
                     }
                     mapa[centro_fila_jug][centro_columna_jug] = '.';
+                }
+
+                //cambio nivel
+                else if(mapa[centro_fila_jug][centro_columna_jug] == 'S')
+                {
+                    inicializar_mapa(mapa, "assets/mapas/nivel_2.txt");
+                    int i;
+                    for(i = 0; i < MAX_BALAS; i++)
+                    {
+                        pepe.balas[i].activa = false;
+                    }
+
+                    cantidad_enemigos = 0;
+                    inicializar_enemigos(mapa, enemigos, &cantidad_enemigos);
+
+                    pepe.posx = INICIO_POSX;
+                    pepe.posy = INICIO_POSY;
                 }
 
                 movimiento = teclas[KEY_W] || teclas[KEY_S] || teclas[KEY_A] || teclas[KEY_D];

@@ -1,22 +1,24 @@
 #include <stdio.h>
 #include <allegro5/allegro.h>
+#include <allegro5/allegro_primitives.h>
 #include "estructuras.h"
 #include "funciones.h"
 
 
 
 
-void inicializar_mapa(char mapa[MAPA_FILAS][MAPA_COLUMNAS])
+void inicializar_mapa(char mapa[MAPA_FILAS][MAPA_COLUMNAS], const char* ruta)
 {
-    FILE* nivelprueba = fopen("assets/mapas/nivelprueba.txt", "r");
+    FILE* nivel_1 = fopen(ruta, "r");
 
     int f,c;
     for(f=0;f<MAPA_FILAS;f++){
-        for(c=0;c<MAPA_COLUMNAS;c++){
-           fscanf(nivelprueba, " %c", &mapa[f][c]);
+        for(c=0;c<MAPA_COLUMNAS;c++)
+        {
+           fscanf(nivel_1, " %c", &mapa[f][c]);
         }
     }
-    fclose(nivelprueba);
+    fclose(nivel_1);
 }
 
 void dibujar_mapa(char mapa[MAPA_FILAS][MAPA_COLUMNAS], ALLEGRO_BITMAP* img_piso, ALLEGRO_BITMAP* img_pared, ALLEGRO_BITMAP* img_pared_izq, ALLEGRO_BITMAP* img_adrenalina, ALLEGRO_BITMAP* img_pared_interior)
@@ -47,6 +49,12 @@ void dibujar_mapa(char mapa[MAPA_FILAS][MAPA_COLUMNAS], ALLEGRO_BITMAP* img_piso
             {
                 al_draw_bitmap(img_pared_interior, x_pantalla,y_pantalla,0);
             }
+            else if (mapa[f_dibujada][c_dibujada] == 'S')
+            {
+                al_draw_bitmap(img_piso,x_pantalla,y_pantalla,0);
+                al_draw_filled_rectangle(x_pantalla,y_pantalla,x_pantalla + TILE_SIZE, y_pantalla + TILE_SIZE, al_map_rgba(0, 255, 0, 100));
+            }
+            
             else if(mapa[f_dibujada][c_dibujada] == 'A')
             {
                 al_draw_bitmap(img_piso, x_pantalla, y_pantalla, 0);
