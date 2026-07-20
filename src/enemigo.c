@@ -1,9 +1,10 @@
 #include "estructuras.h"
 #include "enemigo.h"
-#include "funciones.h"
+#include "mapa.h"
 #include <math.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include "jugador.h"
 
 void inicializar_enemigos(char mapa[MAPA_FILAS][MAPA_COLUMNAS], enemigo enemigos[], int* cantidad)
 {
@@ -68,7 +69,7 @@ void disparar_enemigo(enemigo* e, jugador* p, char mapa[MAPA_FILAS][MAPA_COLUMNA
         return;
     }
 
-    float velocidad_bala = 8;
+    float velocidad_bala = 10;
     for (int i = 0; i < MAX_BALAS; i++)
     {
         if(!e->balas[i].activa)
@@ -79,7 +80,7 @@ void disparar_enemigo(enemigo* e, jugador* p, char mapa[MAPA_FILAS][MAPA_COLUMNA
             e->balas[i].vel_y = (direcciony/distancia)* velocidad_bala;
             e->balas[i].angulo = atan2(direcciony,direccionx);
             e->balas[i].activa = true;
-            e->cooldown_disparo = 90;
+            e->cooldown_disparo = 45;
             break;
         }
     }
@@ -99,7 +100,7 @@ void actualizar_balas_enemigo(enemigo* e, char mapa[MAPA_FILAS][MAPA_COLUMNAS])
         e->balas[i].posx += e->balas[i].vel_x;
         e->balas[i].posy += e->balas[i].vel_y;
 
-        if (e->balas[i].posx < 0 || e->balas[i].posx > pantalla_ancho || e->balas[i].posy < 0 || e->balas[i].posy > pantalla_alto)
+        if (e->balas[i].posx < 0 || e->balas[i].posx > (MAPA_COLUMNAS * TILE_SIZE) || e->balas[i].posy < 0 || e->balas[i].posy > (MAPA_FILAS * TILE_SIZE))
         {
             e->balas[i].activa = false;
             continue;

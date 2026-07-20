@@ -2,6 +2,7 @@
 #define ESTRUCTURAS_H
 #include "definiciones.h"
 #include <stdbool.h>
+#include <allegro5/allegro.h>
 
 
 enum TECLAS 
@@ -21,19 +22,6 @@ typedef struct{
     int daño;
 }bala;
 
-typedef struct {
-    float posx;
-    float posy;
-    float velocidad;
-    float size;
-    int frame_actual;
-    int adrenalina;
-    int adren_maxima;
-    int vida;
-    int vida_maxima;
-    bala balas[MAX_BALAS];
-    int cooldown_disparo;
-}jugador;
 
 typedef struct {
     float posx;
@@ -56,6 +44,27 @@ typedef enum {
     JUEGO, // 1 
 } estado_juego;
 
+typedef struct {
+    ALLEGRO_BITMAP* img_piso;
+    ALLEGRO_BITMAP* img_pared;
+    ALLEGRO_BITMAP* img_pared_izq;
+    ALLEGRO_BITMAP* img_adrenalina;
+    ALLEGRO_BITMAP* img_pared_interior;
+    ALLEGRO_BITMAP* img_esquina_sup_izq;
+    ALLEGRO_BITMAP* img_esquina_sup_der;
+    ALLEGRO_BITMAP* img_pared_der;
+    ALLEGRO_BITMAP* img_pared_abajo;
+    ALLEGRO_BITMAP* img_esquina_inf_izq;
+    ALLEGRO_BITMAP* img_esquina_inf_der;
+    ALLEGRO_BITMAP* img_borde1;   
+    ALLEGRO_BITMAP* img_borde2;
+    ALLEGRO_BITMAP* img_borde3;
+    ALLEGRO_BITMAP* img_borde4;
+    ALLEGRO_BITMAP* img_negro;
+    ALLEGRO_BITMAP* img_piso_som;
+    ALLEGRO_BITMAP* img_piso_lat_som;
+    ALLEGRO_BITMAP* img_piso_esq_som;
+} texturas_mapa;
 
 
 

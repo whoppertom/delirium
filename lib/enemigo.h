@@ -1,6 +1,6 @@
 #ifndef ENEMIGO_H
 #define ENEMIGO_H
-
+#include "jugador.h"
 #include "estructuras.h"
 
 void inicializar_enemigos(char mapa[MAPA_FILAS][MAPA_COLUMNAS], enemigo enemigos[], int* cantidad);

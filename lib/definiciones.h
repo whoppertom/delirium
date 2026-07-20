@@ -5,15 +5,15 @@
 
 //---------MAPA---------
 
-#define MAPA_FILAS 17
-#define MAPA_COLUMNAS 30
+#define MAPA_FILAS 50
+#define MAPA_COLUMNAS 40
 #define TILE_SIZE 64 //ancho y alto de cada bloque en pixeles
 
 //---------PANTALLA---------
 
 #define FPS 60
-#define pantalla_ancho (MAPA_COLUMNAS * TILE_SIZE)
-#define pantalla_alto (MAPA_FILAS * TILE_SIZE)
+#define pantalla_ancho 1920
+#define pantalla_alto 1088
 
 //---------JUGADOR---------
 
