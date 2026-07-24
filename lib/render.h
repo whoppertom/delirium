@@ -5,11 +5,11 @@
 #include "estructuras.h"
 #include "mapa.h"
 
-void render_jugador(jugador* p, ALLEGRO_BITMAP* sprite_idle, ALLEGRO_BITMAP* sprite_srun1, ALLEGRO_BITMAP* sprite_srun2, bool movimiento, int sprite_actual, float angulo);
-void render_balas_jugador(jugador* p, ALLEGRO_BITMAP* sprite);
+void render_jugador(jugador* p, texturas_sprites* sprites, bool movimiento, int sprite_actual, float angulo);
+void render_balas_jugador(jugador* p, texturas_sprites* sprites);
 
-void render_enemigo(enemigo enemigos[], int cantidad, ALLEGRO_BITMAP* sprite);
-void render_balas_enemigo(enemigo enemigos[], int cantidad, ALLEGRO_BITMAP* sprite);
+void render_enemigo(enemigo enemigos[], int cantidad, texturas_sprites* sprites);
+void render_balas_enemigo(enemigo enemigos[], int cantidad, texturas_sprites* sprites);
 
 
 #endif

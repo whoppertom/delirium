@@ -28,26 +28,20 @@ int main()
     ALLEGRO_DISPLAY* ventana = al_create_display(pantalla_ancho, pantalla_alto );
     if (!ventana) {fprintf(stderr, "no se pudo crear la ventana");return -1;}
 
+    
     ALLEGRO_FONT* fuente = al_create_builtin_font();
 
     //CARGAR TEXTURAS
     texturas_mapa texturas_del_juego;
     cargar_texturas_mapa(&texturas_del_juego);
-    
     // CARGAR SPRITES
-    ALLEGRO_BITMAP* sprite_personaje1 = al_load_bitmap("sprites/sprite1.png");
-    ALLEGRO_BITMAP* img_barra_vida = al_load_bitmap("sprites/barra_vida.png");
-    ALLEGRO_BITMAP* img_barra_adren = al_load_bitmap("sprites/barra_adrenalina.png");
-    ALLEGRO_BITMAP* img_adrenalina = al_load_bitmap("sprites/adrenalina.png");
-    ALLEGRO_BITMAP* img_titulo = al_load_bitmap("sprites/titulo.png");
-    ALLEGRO_BITMAP* img_puntero = al_load_bitmap("sprites/puntero.png");
-    ALLEGRO_BITMAP* img_bala = al_load_bitmap("sprites/bala.png");
-    ALLEGRO_BITMAP* img_srun1 = al_load_bitmap("sprites/sprite1_run.png");
-    ALLEGRO_BITMAP* img_srun2 = al_load_bitmap("sprites/sprite1_run2.png"); 
-    ALLEGRO_BITMAP* img_enemigo1 = al_load_bitmap("sprites/enemigo1.png");
-    ALLEGRO_BITMAP* img_bala_e1 = al_load_bitmap("sprites/bala_enemigo1.png");
+    texturas_sprites los_sprites;
+    cargar_texturas_sprites(&los_sprites);
+    //CARGAR HUD
+    texturas_hud hud;
+    cargar_texturas_hud(&hud);
 
-
+  
 
     ALLEGRO_TIMER* temporizador = al_create_timer(1.0 / FPS);
     ALLEGRO_EVENT_QUEUE* cola_eventos = al_create_event_queue();
@@ -68,7 +62,7 @@ int main()
     estado_juego estado = MENU;
 
     //---------jugador--------//
-    jugador pepe = {INICIO_POSX, INICIO_POSY, INICIO_VELOCIDAD, INICIO_SIZE, 0, 100, 100, 100, 100, {0}, 0};
+    jugador pepe = {0, 0, INICIO_VELOCIDAD, INICIO_SIZE, 0, 100, 100, 100, 100, {0}, 0};
     int mouse_x = 0;
     int mouse_y = 0;
     float cam_x = 0;
@@ -86,6 +80,7 @@ int main()
     //------------mapa------------//
     char mapa[MAPA_FILAS][MAPA_COLUMNAS];
     inicializar_mapa(mapa, "assets/mapas/nivelprueba.txt");
+    spawn(&pepe, mapa);
 
     //------------enemigo1------------//
     enemigo enemigos[MAX_ENEMIGOS];
@@ -108,7 +103,6 @@ int main()
             ejecutar = false;
         }
 
-
         //--------teclado----------//
         else if(evento.type==ALLEGRO_EVENT_KEY_DOWN)
         {
@@ -125,6 +119,9 @@ int main()
                     break;
                 case ALLEGRO_KEY_D:
                     teclas[KEY_D] = true;
+                    break;
+                case ALLEGRO_KEY_R:
+                    teclas[KEY_R] = true;
                     break;
                 case ALLEGRO_KEY_ESCAPE:
                     ejecutar = false;
@@ -147,6 +144,9 @@ int main()
                 case ALLEGRO_KEY_D:
                     teclas[KEY_D] = false;
                     break;
+                case ALLEGRO_KEY_R:
+                    teclas[KEY_R] = false;
+                    break;
             }
         }
 
@@ -160,8 +160,10 @@ int main()
 
         else if (evento.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN)
         {
+
             if (estado == MENU)
             {
+                
                 int pos_mousex = evento.mouse.x;
                 int pos_mousey = evento.mouse.y;
 
@@ -175,15 +177,16 @@ int main()
                 {
                     ejecutar = false;
                 }
+
             }
 
             else if(estado == JUEGO)
             {
-                    if(evento.mouse.button == 1 && pepe.cooldown_disparo == 0)
-                    {
-                        disparar_jugador(&pepe, angulo_personaje, cam_x, cam_y, mouse_x, mouse_y);
-                    }
+                if(evento.mouse.button == 1 && pepe.cooldown_disparo == 0)
+                {
+                    disparar_jugador(&pepe, angulo_personaje, cam_x, cam_y, mouse_x, mouse_y);
                 }
+            }
             
         }
 
@@ -201,7 +204,7 @@ int main()
                 {
                     if(enemigos[i].activa)
                     {
-                        actualizar_enemigo(&enemigos[i], mapa);
+                        actualizar_enemigo(&enemigos[i], mapa, &pepe);
                         disparar_enemigo(&enemigos[i], &pepe, mapa);
                         actualizar_balas_enemigo(&enemigos[i], mapa);
                     }
@@ -266,7 +269,7 @@ int main()
                 }
 
                 //----------CAMBIO DE NIVEL-----------//
-                else if(mapa[centro_fila_jug][centro_columna_jug] == 'S')
+                else if(mapa[centro_fila_jug][centro_columna_jug] == 'F')
                 {
                     inicializar_mapa(mapa, "assets/mapas/nivel_2.txt");
                     int i;
@@ -277,9 +280,7 @@ int main()
 
                     cantidad_enemigos = 0;
                     inicializar_enemigos(mapa, enemigos, &cantidad_enemigos);
-
-                    pepe.posx = INICIO_POSX;
-                    pepe.posy = INICIO_POSY;
+                    spawn(&pepe,mapa);
                 }
 
                 //------------ANIMACION JUGADOR-----------//
@@ -293,8 +294,8 @@ int main()
                         sprite_actual = 1 - sprite_actual;
                     }
                 }
-                redibujar=true;
             }
+        redibujar=true;
         }
    
 
@@ -310,7 +311,7 @@ int main()
             if (estado == MENU)
             {
                 //titulo
-                al_draw_bitmap(img_titulo,545,90,0);
+                al_draw_bitmap(hud.img_titulo,545,90,0);
 
                 //boton jugar
                 al_draw_filled_rectangle(760,450,1160,530, al_map_rgb(255,255,255));
@@ -319,6 +320,7 @@ int main()
                 //boton salir
                 al_draw_filled_rectangle(760,570,1160,650, al_map_rgb(255,255,255));
                 al_draw_text(fuente, al_map_rgb(0,0,0), 960, 602, ALLEGRO_ALIGN_CENTRE, "SALIR");
+
             }
 
             else if (estado == JUEGO)
@@ -333,16 +335,18 @@ int main()
                 dibujar_mapa(mapa, &texturas_del_juego);
 
                 
-                render_jugador(&pepe, sprite_personaje1, img_srun1, img_srun2, movimiento, sprite_actual, angulo_personaje);
-                render_balas_jugador(&pepe, img_bala);
+                render_jugador(&pepe, &los_sprites, movimiento, sprite_actual, angulo_personaje);
+                render_balas_jugador(&pepe, &los_sprites);
 
-                render_enemigo(enemigos, cantidad_enemigos, img_enemigo1);
-                render_balas_enemigo(enemigos, cantidad_enemigos, img_bala_e1);
+                render_enemigo(enemigos, cantidad_enemigos, &los_sprites);
+                render_balas_enemigo(enemigos, cantidad_enemigos, &los_sprites);
 
             
-                dibujar_hud(&pepe, img_puntero, img_barra_vida, img_barra_adren, mouse_x, mouse_y);
+                dibujar_hud(&pepe, &hud, mouse_x, mouse_y, fuente);
 
             }
+
+
             al_flip_display();
         }
     }
@@ -359,21 +363,23 @@ int main()
     al_destroy_bitmap(texturas_del_juego.img_esquina_sup_der);
     al_destroy_bitmap(texturas_del_juego.img_pared_der);
 
+    al_destroy_bitmap(los_sprites.sprite_personaje1);
+    al_destroy_bitmap(los_sprites.img_srun1);
+    al_destroy_bitmap(los_sprites.img_srun2);
+    al_destroy_bitmap(los_sprites.img_bala);
+    al_destroy_bitmap(los_sprites.img_enemigo1);
+    al_destroy_bitmap(los_sprites.img_bala_e1);
+    al_destroy_bitmap(los_sprites.img_adrenalina);
+
+    al_destroy_bitmap(hud.img_puntero);
+    al_destroy_bitmap(hud.img_barra_vida);
+    al_destroy_bitmap(hud.img_barra_adren);
+    al_destroy_bitmap(hud.img_titulo);
+
     al_destroy_event_queue(cola_eventos);
     al_destroy_display(ventana);
     al_destroy_timer(temporizador);
-    al_destroy_bitmap(sprite_personaje1);
-    al_destroy_bitmap(img_barra_adren);
-    al_destroy_bitmap(img_barra_vida);
-    al_destroy_bitmap(img_adrenalina);
-    al_destroy_bitmap(img_titulo);
-    al_destroy_font(fuente);
-    al_destroy_bitmap(img_puntero);
-    al_destroy_bitmap(img_bala);
-    al_destroy_bitmap(img_srun1);
-    al_destroy_bitmap(img_srun2);
-    al_destroy_bitmap(img_enemigo1);
-    al_destroy_bitmap(img_bala_e1);
 
+    
     return 0;
 }

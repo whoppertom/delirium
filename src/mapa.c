@@ -106,11 +106,13 @@ void dibujar_mapa(char mapa[MAPA_FILAS][MAPA_COLUMNAS], texturas_mapa* texturas)
                 al_draw_bitmap(texturas->img_pared_abajo, x_pantalla, y_pantalla,0);
             }
 
-
-
             //--------------INTERACTUABLES--------------//
+            else if(mapa[f_dibujada][c_dibujada]== 'S')
+            {
+                al_draw_bitmap(texturas->img_piso, x_pantalla, y_pantalla,0);
+            }
             
-            else if (mapa[f_dibujada][c_dibujada] == 'S')
+            else if (mapa[f_dibujada][c_dibujada] == 'F')
             {
                 al_draw_bitmap(texturas->img_piso,x_pantalla,y_pantalla,0);
                 al_draw_filled_rectangle(x_pantalla,y_pantalla,x_pantalla + TILE_SIZE, y_pantalla + TILE_SIZE, al_map_rgba(0, 255, 0, 100));
@@ -124,6 +126,19 @@ void dibujar_mapa(char mapa[MAPA_FILAS][MAPA_COLUMNAS], texturas_mapa* texturas)
                     al_get_bitmap_width(texturas->img_adrenalina),
                     al_get_bitmap_height(texturas->img_adrenalina),
                     x_pantalla, y_pantalla,
+                    TILE_SIZE, TILE_SIZE,
+                    0
+                );
+            }
+
+            else if(mapa[f_dibujada][c_dibujada] == 'V')
+            {
+                al_draw_bitmap(texturas->img_piso,x_pantalla,y_pantalla, 0);
+                al_draw_scaled_bitmap(texturas->img_vida,
+                    0,0,
+                    al_get_bitmap_width(texturas->img_vida),
+                    al_get_bitmap_height(texturas->img_vida),
+                    x_pantalla,y_pantalla,
                     TILE_SIZE, TILE_SIZE,
                     0
                 );

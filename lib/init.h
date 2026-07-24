@@ -7,6 +7,10 @@
 
 bool inicializar_allegro();
 void cargar_texturas_mapa(texturas_mapa* texturas);
+void cargar_texturas_sprites(texturas_sprites* sprites);
+void cargar_texturas_hud(texturas_hud* hud);
+
 void destruir_texturas(texturas_mapa* texturas);
+
 
 #endif

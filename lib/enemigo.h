@@ -14,7 +14,7 @@ void daño_jugador(enemigo enemigos[], int cantidad, jugador* p);
 //encontrar colision entre jugador y enemigo
 bool linea_de_vision(enemigo* e, jugador* p, char mapa[MAPA_FILAS][MAPA_COLUMNAS]);
 
-void actualizar_enemigo(enemigo* e, char mapa[MAPA_FILAS][MAPA_COLUMNAS]);
+void actualizar_enemigo(enemigo* e, char mapa[MAPA_FILAS][MAPA_COLUMNAS], jugador* p);
 
 void daño_enemigo(enemigo enemigos[], int cantidad, jugador* p);
 #endif

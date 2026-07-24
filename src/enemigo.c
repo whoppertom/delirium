@@ -17,16 +17,18 @@ void inicializar_enemigos(char mapa[MAPA_FILAS][MAPA_COLUMNAS], enemigo enemigos
         {
             if (mapa[f][c] == '@' && *cantidad < MAX_ENEMIGOS)
             {
+                enemigos[*cantidad].tipo = 1;
                 enemigos[*cantidad].posx = c * TILE_SIZE;
                 enemigos[*cantidad].posy = f * TILE_SIZE;
-                enemigos[*cantidad].ancho = 128;
-                enemigos[*cantidad].alto = 128;
+                enemigos[*cantidad].ancho = 100;
+                enemigos[*cantidad].alto = 100;
                 enemigos[*cantidad].activa = true;
                 enemigos[*cantidad].velocidad = VELOCIDAD_ENEMIGO;
                 enemigos[*cantidad].angulo = 0;
-                enemigos[*cantidad].modo_patrulla = rand()%2; // 0 = horizontal ; 1 = vertical
-                enemigos[*cantidad].direccion = 1; // 1 = derecha/abajo ; -1 = izquierda/arriba
-                enemigos[*cantidad].espera = 0;
+                enemigos[*cantidad].estado = 0;
+                enemigos[*cantidad].target_x = 0;
+                enemigos[*cantidad].target_y = 0;
+                enemigos[*cantidad].espera = 60;
                 enemigos[*cantidad].cooldown_disparo = 0;
                 enemigos[*cantidad].vida = 100;
                 for (int b= 0; b<MAX_BALAS; b++)
@@ -36,15 +38,70 @@ void inicializar_enemigos(char mapa[MAPA_FILAS][MAPA_COLUMNAS], enemigo enemigos
                 (*cantidad)++;
                 mapa[f][c] = '.';
             }
+
+            if(mapa[f][c] == '0' && *cantidad < MAX_ENEMIGOS)
+            {
+                enemigos[*cantidad].tipo = 2;
+                enemigos[*cantidad].posx = c * TILE_SIZE;
+                enemigos[*cantidad].posy = f * TILE_SIZE;
+                enemigos[*cantidad].ancho = 100;
+                enemigos[*cantidad].alto = 100;
+                enemigos[*cantidad].activa = true;
+                enemigos[*cantidad].velocidad = VELOCIDAD_ENEMIGO * 3;
+                enemigos[*cantidad].angulo = 0;
+                enemigos[*cantidad].estado = 0;
+                enemigos[*cantidad].target_x = 0;
+                enemigos[*cantidad].target_y = 0;
+                enemigos[*cantidad].espera = 60;
+                enemigos[*cantidad].cooldown_disparo = 0; //cooldown golpe
+                enemigos[*cantidad].vida = 150;
+                for (int b = 0; b<MAX_BALAS; b++)
+                {
+                    enemigos[*cantidad].balas[b].activa = false;
+                }
+                (*cantidad)++;
+                mapa[f][c] = '.' ;
+            }
+
+            if(mapa[f][c] == 'x' && *cantidad < MAX_ENEMIGOS)
+            {
+                enemigos[*cantidad].tipo = 3;
+                enemigos[*cantidad].posx = c * TILE_SIZE;
+                enemigos[*cantidad].posy = f * TILE_SIZE;
+                enemigos[*cantidad].ancho = 100;
+                enemigos[*cantidad].alto = 100;
+                enemigos[*cantidad].activa = true;
+                enemigos[*cantidad].velocidad = 0;
+                enemigos[*cantidad].angulo = 0;
+                enemigos[*cantidad].estado = 0;
+                enemigos[*cantidad].target_x = 0;
+                enemigos[*cantidad].target_y = 0;
+                enemigos[*cantidad].espera = 60;
+                enemigos[*cantidad].cooldown_disparo = 0; //cooldown golpe
+                enemigos[*cantidad].vida = 100;
+                for (int b = 0; b<MAX_BALAS; b++)
+                {
+                    enemigos[*cantidad].balas[b].activa = false;
+                }
+                (*cantidad)++;
+                mapa[f][c] = '.' ;
+            }
         }
     }
 }
 
 void disparar_enemigo(enemigo* e, jugador* p, char mapa[MAPA_FILAS][MAPA_COLUMNAS])
-{
+{   
+    if (e->tipo == 2) return;
+    
     if (e->cooldown_disparo > 0)
     {
         e->cooldown_disparo--;
+        return;
+    }
+
+    if(e->estado !=2)
+    {
         return;
     }
     //centro de enemigo y jugador
@@ -57,23 +114,15 @@ void disparar_enemigo(enemigo* e, jugador* p, char mapa[MAPA_FILAS][MAPA_COLUMNA
     float direcciony = centro_jugadory - centro_enemigoy;
     float distancia = sqrt(direccionx*direccionx + direcciony*direcciony);
 
+    //------------ENEMIGO 1-----------------//
 
-    if (distancia > RANGO_VISION_ENEMIGO * TILE_SIZE)
+    if (e->tipo == 1)
     {
-        return;
-    }
-
-    //hay bloque entre medio
-    if(!linea_de_vision(e,p,mapa))
-    {
-        return;
-    }
-
-    float velocidad_bala = 10;
-    for (int i = 0; i < MAX_BALAS; i++)
-    {
-        if(!e->balas[i].activa)
+        float velocidad_bala = 20;
+        for(int i = 0; i < MAX_BALAS; i++)
         {
+            if(!e->balas[i].activa)
+            {
             e->balas[i].posx = centro_enemigox;
             e->balas[i].posy = centro_enemigoy;
             e->balas[i].vel_x = (direccionx/distancia)* velocidad_bala;
@@ -81,7 +130,32 @@ void disparar_enemigo(enemigo* e, jugador* p, char mapa[MAPA_FILAS][MAPA_COLUMNA
             e->balas[i].angulo = atan2(direcciony,direccionx);
             e->balas[i].activa = true;
             e->cooldown_disparo = 45;
+            e->balas[i].daño = 10;
             break;
+            }
+
+        }
+    }
+
+    //-------------ENEMIGO 3--------------//
+    if(e->tipo == 3)
+    {
+        float velocidad_bala = 30;
+        for(int i = 0; i < MAX_BALAS; i++)
+        {
+            if(!e->balas[i].activa)
+            {
+            e->balas[i].posx = centro_enemigox;
+            e->balas[i].posy = centro_enemigoy;
+            e->balas[i].vel_x = (direccionx/distancia)* velocidad_bala;
+            e->balas[i].vel_y = (direcciony/distancia)* velocidad_bala;
+            e->balas[i].angulo = atan2(direcciony,direccionx);
+            e->balas[i].activa = true;
+            e->cooldown_disparo = 90;
+            e->balas[i].daño = 30;
+            break;
+            }
+
         }
     }
 
@@ -123,27 +197,72 @@ void daño_jugador(enemigo enemigos[], int cantidad, jugador* p)
         {
             continue;
         }
-
-        for (int j = 0; j < MAX_BALAS; j++)
+        //---------------- ENEMIGO 1 ---------------//
+        if (enemigos[i].tipo == 1)
         {
-            if(!enemigos[i].balas[j].activa)
+            for (int j = 0; j < MAX_BALAS; j++)
             {
-                continue;
-            }
-
-            float balax = enemigos[i].balas[j].posx;
-            float balay = enemigos[i].balas[j].posy;
-
-            //hitbox con el jugador
-            if(balax > p->posx && balax < p->posx + p->size && balay > p->posy && balay < p->posy + p->size)
-            {
-                enemigos[i].balas[j].activa = false;
-                p->vida -= 10;
-                if(p->vida < 0)
+                if(!enemigos[i].balas[j].activa)
                 {
-                    p->vida = 0;
+                    continue;
+                }
+                float bala_x = enemigos[i].balas[j].posx;
+                float bala_y = enemigos[i].balas[j].posy;
+                if(bala_x > p->posx && bala_x < p->posx + p->size && bala_y > p->posy && bala_y < p->posy + p->size)
+                {
+                    enemigos[i].balas[j].activa = false;
+                    p->vida -= enemigos[i].balas[j].daño; 
+                    if(p->vida < 0)
+                    {
+                        p->vida = 0;
+                    }
                 }
             }
+        }
+        //---------------- ENEMIGO 2  ---------------//
+        else if(enemigos[i].tipo == 2)
+        {
+            if (enemigos[i].cooldown_disparo > 0)
+            {
+                enemigos[i].cooldown_disparo--;
+            }
+            float direccion_x = (enemigos[i].posx + enemigos[i].ancho/2) - (p->posx + p->size/2);
+            float direccion_y = (enemigos[i].posy + enemigos[i].alto/2) - (p->posy + p->size/2);
+            float distancia = sqrt(direccion_x*direccion_x + direccion_y*direccion_y);
+            if(distancia < (enemigos[i].ancho/2 + p->size/2 - 20))
+            {
+                if(enemigos[i].cooldown_disparo <= 0)
+                {
+                    p->vida -= 15;
+                    if(p->vida < 0)
+                    {
+                        p->vida = 0;
+                    }
+                    enemigos[i].cooldown_disparo = 60;
+                }
+            }
+        }
+        //---------------- ENEMIGO 3 ---------------//
+        else if (enemigos[i].tipo == 3)
+        {
+            for (int j = 0; j < MAX_BALAS; j++)
+            {
+                if(!enemigos[i].balas[j].activa)
+                {
+                    continue;
+                }
+                float bala_x = enemigos[i].balas[j].posx;
+                float bala_y = enemigos[i].balas[j].posy;
+                if(bala_x > p->posx && bala_x < p->posx + p->size && bala_y > p->posy && bala_y < p->posy + p->size)
+                {
+                    enemigos[i].balas[j].activa = false;
+                    p->vida -= enemigos[i].balas[j].daño; 
+                    if(p->vida < 0)
+                    {
+                        p->vida = 0;
+                    }
+                }
+            } 
         }
     }
 
@@ -151,7 +270,7 @@ void daño_jugador(enemigo enemigos[], int cantidad, jugador* p)
 
 bool linea_de_vision(enemigo* e, jugador* p, char mapa[MAPA_FILAS][MAPA_COLUMNAS])
 {
-//centro de enemigo y jugador
+    //centro de enemigo y jugador
     float centro_enemigox = e->posx + e->ancho / 2;
     float centro_enemigoy = e->posy + e->alto / 2;
     float centro_jugadorx = p->posx + p->size / 2;
@@ -182,81 +301,247 @@ bool linea_de_vision(enemigo* e, jugador* p, char mapa[MAPA_FILAS][MAPA_COLUMNAS
     return true;
 }
 
-void actualizar_enemigo(enemigo* e, char mapa[MAPA_FILAS][MAPA_COLUMNAS])
+void actualizar_enemigo(enemigo* e, char mapa[MAPA_FILAS][MAPA_COLUMNAS], jugador* p)
 {
+    float centro_enemigox = e->posx + e->ancho/2;
+    float centro_enemigoy = e->posy + e->alto/2;
+    float centro_jugadorx = p->posx + p->size/2;
+    float centro_jugadory = p->posy + p->size/2;
 
-    if (e->espera>0)
+    float distanciax = centro_jugadorx - centro_enemigox;
+    float distanciay = centro_jugadory - centro_enemigoy;
+    float distancia_total = sqrt(distanciax*distanciax + distanciay*distanciay);
+
+    bool ver_jugador = (distancia_total <= RANGO_VISION_ENEMIGO * TILE_SIZE) && linea_de_vision(e,p,mapa);
+
+
+    //----------------ENEMIGO 1------------//
+    if (e->tipo == 1)
     {
-        e->espera--;
-        return;
-    }
-
-    float nueva_posx = e->posx;
-    float nueva_posy = e->posy;
-
-    //horizontal
-    if(e->modo_patrulla == 0) 
-    {
-        nueva_posx += e->velocidad * e->direccion;
-        
-        if(e->direccion == 1) //derecha
+        if(ver_jugador)
         {
-            e->angulo = 0;
+            e->estado = 2; //atacar
+            e->target_x = centro_jugadorx;
+            e->target_y = centro_jugadory;
         }
-        else //izquierda
+        else if (e->estado == 2)
         {
-            e->angulo = M_PI;
+            e->estado = 3;
         }
-    }
 
-    //vertical
-    else 
-    {
-        nueva_posy += e->velocidad * e->direccion;
-
-        if(e->direccion == 1) //abajo
+        if(e-> estado == 0)
         {
-            e->angulo = M_PI / 2;
-        }
-        else //arriba
-        {
-            e->angulo = -M_PI /2;
-        }
-    }
-
-    //chocar con colision
-    int fila_sup =(nueva_posy + 10) / TILE_SIZE;
-    int fila_inf =(nueva_posy + e->alto - 10) / TILE_SIZE;
-    int col_izq =(nueva_posx + 10) / TILE_SIZE;
-    int col_der =(nueva_posx + e->ancho - 10) / TILE_SIZE;
-
-    bool chocar = false;
-    for (int f = fila_sup; f <= fila_inf && !chocar; f++)
-    {
-        for(int c = col_izq; c <= col_der && !chocar; c++)
-        {
-            if (f >= 0 && f < MAPA_FILAS && c >= 0 && c < MAPA_COLUMNAS)
+            if(e->espera>0)
             {
-                if(colision(mapa[f][c]))
+                e->espera--;
+            }
+
+        else
+        {
+            bool objetivo = false;
+            while (!objetivo)
+            {
+                int f = rand() % MAPA_FILAS;
+                int c = rand() % MAPA_COLUMNAS;
+
+                if(!colision(mapa[f][c]))
                 {
-                    chocar=true;
+                    e->target_x = c * TILE_SIZE;
+                    e->target_y = f * TILE_SIZE;
+                    e->estado = 1;
+                    objetivo = true;
                 }
             }
-        } 
+        }
+        }
+
+        else if(e->estado == 1 || e->estado == 3)
+        {
+            float vel_actual;
+            if(e->estado == 3)
+            {
+                vel_actual = VELOCIDAD_BUSQUEDA;
+            }
+            else
+            {
+                vel_actual = e->velocidad;
+            }
+            float dir_x = e->target_x - e->posx;
+            float dir_y = e->target_y - e->posy;
+            float distancia_al_target = sqrt(dir_x*dir_x + dir_y*dir_y);
+
+            if(distancia_al_target < vel_actual)
+            {
+                e->posx = e->target_x;
+                e->posy = e->target_y;
+                e->estado = 0;
+                e->espera = 60;
+                return;
+            }
+
+            float nueva_posx = e->posx + (dir_x / distancia_al_target) * vel_actual;
+            float nueva_posy = e->posy + (dir_y / distancia_al_target) * vel_actual;
+
+            e->angulo = atan2(dir_y, dir_x);
+
+            int fila_sup = (nueva_posy + 10) / TILE_SIZE;
+            int fila_inf = (nueva_posy + e->alto - 10) / TILE_SIZE;
+            int col_izq = (nueva_posx + 10) / TILE_SIZE;
+            int col_der = (nueva_posx + e->ancho - 10) / TILE_SIZE;
+        
+            bool chocar = false;
+            for(int f = fila_sup; f <= fila_inf && !chocar; f++)
+            {
+                for(int c = col_izq; c<= col_der && !chocar; c++)
+                {
+                    if(f >= 0 && f < MAPA_FILAS && c >= 0 && c < MAPA_COLUMNAS)
+                    {
+                        if(colision(mapa[f][c]))
+                        {
+                            chocar = true;
+                        }
+                    }
+                }
+            }
+
+            if(chocar)
+            {
+                e->estado = 0;
+                e->espera = 60;
+            }
+            else
+            {
+                e->posx = nueva_posx;
+                e->posy = nueva_posy;
+            }
+        }
+        else if( e->estado == 2)
+        {
+            e->angulo = atan2(distanciay, distanciax);
+        }    
     }
 
-    if(chocar)
+    //--------------ENEMIGO 2-----------//
+
+    else if(e->tipo == 2)
     {
-        e->direccion = -e->direccion;
-        e->espera = ESPERA_DE_PATRULLA;
+        if(ver_jugador)
+        {
+            e->estado = 2;
+            e->target_x = centro_jugadorx;
+            e->target_y = centro_jugadory;
+        }
+        else if (e->estado == 2)
+        {
+            e->estado = 3;
+        }
+
+        if(e-> estado == 0)
+        {
+            if(e->espera>0)
+            {
+                e->espera--;
+            }
+
+            else
+            {
+                bool objetivo = false;
+                while (!objetivo)
+                {
+                    int f = rand() % MAPA_FILAS;
+                    int c = rand() % MAPA_COLUMNAS;
+
+                    if(!colision(mapa[f][c]))
+                    {
+                        e->target_x = c * TILE_SIZE;
+                        e->target_y = f * TILE_SIZE;
+                        e->estado = 1;
+                        objetivo = true;
+                    }
+                }
+            }   
+        }
+
+        else if(e->estado == 1 || e->estado == 2 || e->estado == 3)
+        {
+            float vel_actual;
+            if(e->estado == 3)
+            {
+                vel_actual = VELOCIDAD_BUSQUEDA;
+            }
+            else
+            {
+                vel_actual = e->velocidad;
+            }
+            float dir_x = e->target_x - e->posx;
+            float dir_y = e->target_y - e->posy;
+            float distancia_al_target = sqrt(dir_x*dir_x + dir_y*dir_y);
+
+            if(distancia_al_target < vel_actual)
+            {
+                e->posx = e->target_x;
+                e->posy = e->target_y;
+                e->estado = 0;
+                e->espera = 60;
+                return;
+            }
+
+            float nueva_posx = e->posx + (dir_x / distancia_al_target) * vel_actual;
+            float nueva_posy = e->posy + (dir_y / distancia_al_target) * vel_actual;
+
+            e->angulo = atan2(dir_y, dir_x);
+
+            int fila_sup = (nueva_posy + 10) / TILE_SIZE;
+            int fila_inf = (nueva_posy + e->alto - 10) / TILE_SIZE;
+            int col_izq = (nueva_posx + 10) / TILE_SIZE;
+            int col_der = (nueva_posx + e->ancho - 10) / TILE_SIZE;
+        
+            bool chocar = false;
+            for(int f = fila_sup; f <= fila_inf && !chocar; f++)
+            {
+                for(int c = col_izq; c<= col_der && !chocar; c++)
+                {
+                    if(f >= 0 && f < MAPA_FILAS && c >= 0 && c < MAPA_COLUMNAS)
+                    {
+                        if(colision(mapa[f][c]))
+                        {
+                            chocar = true;
+                        }
+                    }
+                }
+            }
+
+            if(chocar)
+            {
+                e->estado = 0;
+                e->espera = 60;
+            }
+            else
+            {
+                e->posx = nueva_posx;
+                e->posy = nueva_posy;
+            }
+        }
     }
-    else
+    //----------------ENEMIGO 3--------------//
+    else if(e->tipo == 3)
     {
-        e->posx = nueva_posx;
-        e->posy = nueva_posy;
+        bool ver_jugador_camper = (distancia_total <= (RANGO_VISION_ENEMIGO * 3) * TILE_SIZE) && linea_de_vision(e,p,mapa);
+
+        if(ver_jugador_camper)
+        {
+            e->estado =2;
+            e->target_x= centro_jugadorx;
+            e->target_y = centro_jugadory;
+            e->angulo = atan2(distanciay, distanciax);
+        }
+        else
+        {
+            e->estado = 0;
+        }
     }
+     
 }
-
 
 void daño_enemigo(enemigo enemigos[], int cantidad, jugador* p)
 {

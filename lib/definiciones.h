@@ -17,10 +17,8 @@
 
 //---------JUGADOR---------
 
-#define INICIO_POSX 100
-#define INICIO_POSY 100
 #define INICIO_VELOCIDAD 10
-#define INICIO_SIZE 128
+#define INICIO_SIZE 100
 #define KEYS 4
 #define corte_ancho_sprite 64
 #define corte_alto_sprite 64
@@ -29,9 +27,10 @@
 
 //--------enemigo-------
 #define MAX_ENEMIGOS 10
-#define RANGO_VISION_ENEMIGO 8
+#define RANGO_VISION_ENEMIGO 12
 #define VELOCIDAD_ENEMIGO 3
 #define ESPERA_DE_PATRULLA 60
+#define VELOCIDAD_BUSQUEDA 6
 
 
 #endif

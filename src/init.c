@@ -46,7 +46,30 @@ void cargar_texturas_mapa(texturas_mapa* texturas)
     texturas->img_piso_som = al_load_bitmap("sprites/piso_sombra.png");
     texturas->img_piso_lat_som = al_load_bitmap("sprites/piso_lat_som.png");
     texturas->img_piso_esq_som = al_load_bitmap("sprites/piso_esq_som.png");
+    texturas->img_vida = al_load_bitmap("sprites/vida.png");
+}
+void cargar_texturas_sprites(texturas_sprites* sprites)
+{
+    sprites->sprite_personaje1 = al_load_bitmap("sprites/sprite1.png");
+    sprites->img_srun1 = al_load_bitmap("sprites/sprite1_run.png");
+    sprites->img_srun2 = al_load_bitmap("sprites/sprite1_run2.png");
+    sprites->img_bala = al_load_bitmap("sprites/bala.png");
+    sprites->img_enemigo1 = al_load_bitmap("sprites/enemigo1.png");
+    sprites->img_bala_e1 = al_load_bitmap("sprites/bala_enemigo1.png");
+    sprites->img_adrenalina = al_load_bitmap("sprites/adrenalina.png");
+    sprites->img_enemigo2 = al_load_bitmap("sprites/enemigo2.png");
+    sprites->img_enemigo3 = al_load_bitmap("sprites/enemigo3.png");
+    sprites->img_bala_e3 = al_load_bitmap("sprites/bala_enemigo3.png");
+}
 
+void cargar_texturas_hud(texturas_hud* hud)
+{
+    hud->img_puntero = al_load_bitmap("sprites/puntero.png");
+    hud->img_barra_vida = al_load_bitmap("sprites/barra_vida.png");
+    hud->img_barra_adren = al_load_bitmap("sprites/barra_adrenalina.png");
+    hud->img_titulo = al_load_bitmap("sprites/titulo.png");
+    hud->img_bala_hud = al_load_bitmap("sprites/bala_hud.png");
+    hud->img_recarga = al_load_bitmap("sprites/recarga.png");
 }
 
 void destruir_texturas(texturas_mapa* texturas)

@@ -10,7 +10,8 @@ enum TECLAS
     KEY_W,
     KEY_S,
     KEY_A,
-    KEY_D
+    KEY_D,
+    KEY_R
 };
 typedef struct{
     float posx;
@@ -33,10 +34,12 @@ typedef struct {
     int cooldown_disparo;
     float velocidad;
     float angulo;
-    int modo_patrulla; // 0 = horizontal ; 1 = vertical
-    int direccion; //1 = derecha/abajo ; -1 = izquierda/arriba
+    int estado;
+    float target_x;
+    float target_y;
     int espera;
     int vida;
+    int tipo;
 }enemigo;
 
 typedef enum {
@@ -64,8 +67,30 @@ typedef struct {
     ALLEGRO_BITMAP* img_piso_som;
     ALLEGRO_BITMAP* img_piso_lat_som;
     ALLEGRO_BITMAP* img_piso_esq_som;
+    ALLEGRO_BITMAP* img_vida;
 } texturas_mapa;
 
+typedef struct {
+    ALLEGRO_BITMAP* sprite_personaje1;
+    ALLEGRO_BITMAP* img_srun1;
+    ALLEGRO_BITMAP* img_srun2;
+    ALLEGRO_BITMAP* img_bala;
+    ALLEGRO_BITMAP* img_enemigo1;
+    ALLEGRO_BITMAP* img_bala_e1;
+    ALLEGRO_BITMAP* img_adrenalina;
+    ALLEGRO_BITMAP* img_enemigo2;
+    ALLEGRO_BITMAP* img_enemigo3;
+    ALLEGRO_BITMAP* img_bala_e3;
+}texturas_sprites;
+
+typedef struct {
+    ALLEGRO_BITMAP* img_puntero;
+    ALLEGRO_BITMAP* img_barra_vida;
+    ALLEGRO_BITMAP* img_barra_adren;
+    ALLEGRO_BITMAP* img_titulo;
+    ALLEGRO_BITMAP* img_bala_hud;
+    ALLEGRO_BITMAP* img_recarga;
+}texturas_hud;
 
 
 #endif 

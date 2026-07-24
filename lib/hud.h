@@ -4,6 +4,6 @@
 #include <allegro5/allegro_font.h>
 #include "jugador.h"
 
-void dibujar_hud(jugador* p, ALLEGRO_BITMAP* img_puntero, ALLEGRO_BITMAP* img_barra_vida, ALLEGRO_BITMAP* img_barra_adren, int mouse_x, int mouse_y);
+void dibujar_hud(jugador* p, texturas_hud* hud, int mouse_x, int mouse_y, ALLEGRO_FONT* fuente);
 
 #endif
